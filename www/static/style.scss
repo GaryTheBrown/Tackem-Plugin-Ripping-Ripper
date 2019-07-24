@@ -1,0 +1,46 @@
+.driveboxvertical {
+    .driveimg {
+        height:4em;
+    }
+    .drivelock {
+        position:absolute;
+        top:20px;
+        left:75px;
+    }
+}
+.drivebox {
+    width:256px;
+    display:inline-block;
+    position:relative;
+    .driveimg {
+        height:100%;
+    }
+    .drivelock {
+        position:absolute;
+        top:5px;
+        right:5px;
+    }
+}
+
+.labeler_itemvertical{
+
+    .typeimg{
+        height:4em;
+    }
+}
+
+.labeler_item{
+    width:256px;
+    height: 185px;
+    display:inline-block;
+    position:relative;
+    .typeimg{
+        height:128px;
+    }
+}
+
+.disctypesection {
+    .fas{
+        font-size: 500%;
+    }
+}

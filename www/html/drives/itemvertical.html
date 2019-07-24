@@ -1,0 +1,37 @@
+<div class="driveboxvertical inline-block text-dark bg-white text-center border-light rounded mb-2" id="drive%%DRIVENUMBER%%">
+	<div class="row">
+		<div class="col-3 py-2 pl-4">
+			<img src="%%IMAGE%%" class="driveimg">
+			<img class="drivelock" src="%%BASEURL%%ripping/ripper/static/images/locked.png" %%LOCKED%%>
+		</div>
+		<div class="col py-2">
+			<div class="font-weight-bold">%%NAME%%</div>
+			<div class="info">%%INFO%%</div>
+			
+		</div>
+		<div class="col-12 py-2 rippingdata" %%RIPPINGDATAVISIBLE%%>%%RIPPINGDATA%%</div>
+	</div>
+	<script type="text/javascript">
+		setInterval(function() {
+			$.ajax('%%BASEURL%%ripping/ripper/drives/single/%%DRIVENUMBER%%/', {
+				dataType: 'json',
+				success: function(result) {
+					$('#drive%%DRIVENUMBER%%').find('.driveimg').attr('src', result.traystatus);
+					if(result.traylock == true){
+						$('#drive%%DRIVENUMBER%%').find('.drivelock').show();
+					}else{
+						$('#drive%%DRIVENUMBER%%').find('.drivelock').hide();
+					}
+					$('#drive%%DRIVENUMBER%%').find('.info').html(result.drivestatus);
+					if(result.ripping == true){
+						$('#drive%%DRIVENUMBER%%').find('.rippingdata').html(result.rippingdata);
+						$('#drive%%DRIVENUMBER%%').find('.rippingdata').show();
+					} else{
+						$('#drive%%DRIVENUMBER%%').find('.rippingdata').hide();
+						$('#drive%%DRIVENUMBER%%').find('.rippingdata').html("");
+					}
+				}
+			})
+		}, 1000);
+	</script>
+</div>

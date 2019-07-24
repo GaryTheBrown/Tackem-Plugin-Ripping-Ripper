@@ -1,0 +1,43 @@
+<div id="convertergroup">%%ITEMS%%</div>
+<script type="text/javascript">
+	var converterTimer = setInterval(function() {
+		$.ajax('%%BASEURL%%ripping/ripper/converter/getids/', {
+			dataType: 'json',
+			success: function(result) {
+				for (id in result){
+					item_number = result[id];
+					if ($('#converter_item' + item_number).length == 0){
+						$.ajax('%%BASEURL%%ripping/ripper/converter/single/' + item_number + '/', {
+							success: function(newitem) {
+								$('#convertergroup').append(newitem);
+							}
+						})
+					}else{
+						$.ajax('%%BASEURL%%ripping/ripper/converter/getconverting/' + item_number + '/', {
+							success: function(answer) {
+								if (answer == "True"){
+									$('#converter_item' + item_number).find('.convertingbool').html(answer);
+									$.ajax('%%BASEURL%%ripping/ripper/converter/progress/' + item_number + '/', {
+										success: function(newitem) {
+											$('#converter_item' + item_number).find('.progressdata').html(newitem);
+										}
+									})
+								}
+							}
+						})
+					}
+				}
+				$('[id^="converter_item"]').each(function( index ) {
+					id = parseInt($( this ).attr('id').replace('converter_item',''));
+					if (!result.includes(id)){
+						$(this).remove()
+					}
+					
+				});
+			},
+			error: function(){
+				clearTimeout(converterTimer);
+			}
+		})
+	}, 1000);
+</script>
