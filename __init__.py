@@ -290,32 +290,31 @@ Do you want to keep the chapter points?"""),
 class Plugin(PluginBaseClass):
     '''Main Class to create an instance of the plugin'''
 
-    def __init__(self, plugin_link, name, config, root_config, db, musicbrainz):
-        super().__init__(plugin_link, name, config, root_config, db, musicbrainz)
+    def __init__(self, system_name, instance=False):
+        super().__init__(system_name, instance)
         self._drives = []
-        self._video_labeler = VideoLabeler(db, config)
+        self._video_labeler = VideoLabeler(self._tackem_system)
         self._converter = None
         self._renamer = None
 
-        self._db.table_checks("Ripper", db_tables.VIDEO_INFO_DB_INFO)
-        self._db.table_checks("Ripper", db_tables.VIDEO_CONVERT_DB_INFO)
+        self._tackem_system.get_sql().table_checks("Ripper", db_tables.VIDEO_INFO_DB_INFO)
+        self._tackem_system.get_sql().table_checks("Ripper", db_tables.VIDEO_CONVERT_DB_INFO)
 
-        for location in config['locations']:
-            folder = config['locations'][location]
+        for location in self._tackem_system.config()['locations']:
+            folder = self._tackem_system.config()['locations'][location]
             if folder[0] != "/":
-                folder = PROGRAMCONFIGLOCATION + config['locations'][location]
+                folder = PROGRAMCONFIGLOCATION + self._tackem_system.config()['locations'][location]
             pathlib.Path(folder).mkdir(parents=True, exist_ok=True)
 
     def startup(self):
         '''Ripper Startup Script'''
-        baseurl = self._root_config.get("webui", {}).get("baseurl", "/")
         if platform.system() == 'Linux':
             for drive in DRIVES:
-                if drive in self._config['drives']:
-                    if self._config['drives'][drive]["enabled"]:
-                        self._drives.append(DriveLinux(drive, DRIVES[drive],
-                                                       self._config, self._root_config,
-                                                       baseurl, self._db))
+                if drive in self._tackem_system.config()['drives']:
+                    if self._tackem_system.config()['drives'][drive]["enabled"]:
+                        self._drives.append(DriveLinux(drive, DRIVES[drive], self._tackem_system))
+                                                       #self._config, self._root_config,
+                                                       #baseurl, self._db))
 
         #Check if Devices Exist and if not it will stop the plugin from loading
         if not self._drives:
@@ -325,12 +324,12 @@ class Plugin(PluginBaseClass):
         for drive in self._drives:
             drive.start_thread()
 
-        if self._config['converter']['enabled']:
-            self._converter = Converter(self._config, self._root_config, self._db)
+        if self._tackem_system.config()['converter']['enabled']:
+            self._converter = Converter(self._tackem_system)
             self._converter.start_thread()
 
         print("START RENAMER THREAD")
-        self._renamer = Renamer(self._config, self._root_config, self._db)
+        self._renamer = Renamer(self._tackem_system)
         self._renamer.start_thread()
 
         self._running = True

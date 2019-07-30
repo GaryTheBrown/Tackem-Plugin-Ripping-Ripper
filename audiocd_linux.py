@@ -14,10 +14,10 @@ class AudioCDLinux(AudioCD):
 #####################
     def _rip_disc(self):
         '''command to rip the cd here'''
-
-        temp_location = self._config['locations']['audioripping']
+        temp_location = self._tackem_system.config()['locations']['audioripping']
         if temp_location[0] != "/":
-            temp_location = PROGRAMCONFIGLOCATION + self._config['locations']['audioripping']
+            temp_location = PROGRAMCONFIGLOCATION
+            temp_location += self._tackem_system.config()['locations']['audioripping']
         temp_dir = temp_location + str(self._db_id)
         try:
             os.mkdir(temp_dir)

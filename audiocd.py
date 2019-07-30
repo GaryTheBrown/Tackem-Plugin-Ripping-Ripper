@@ -14,9 +14,8 @@ from .data.db_tables import AUDIO_INFO_DB_INFO as INFO_DB
 
 class AudioCD(RipperSubSystem, metaclass=ABCMeta):
     '''Audio ripping controller'''
-    def __init__(self, device, config, db, thread_name, musicbrainz, set_drive_status, thread_run):
-        super().__init__(device, config, db, thread_name, set_drive_status, thread_run)
-        self._musicbrainz = musicbrainz
+    def __init__(self, device, tackem_system, thread_name, set_drive_status, thread_run):
+        super().__init__(device, tackem_system, thread_name, set_drive_status, thread_run)
         self._disc_id = None
         self._track_count = 0
         self._release_id = None
@@ -43,23 +42,27 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
     def _check_db_and_api_for_disc_info(self):
         '''checks the DB and API for the Disc info'''
         basic_info = {"musicbrainz_disc_id":self._disc_id, "track_count":self._track_count}
-        self._db_id = self._db.table_has_row(self._thread_name, INFO_DB["name"], basic_info)
+        self._db_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+                                                                  INFO_DB["name"], basic_info)
         if self._db_id:
             #data in local DB
-            return_data = self._db.select_by_row(self._thread_name, INFO_DB["name"], self._db_id)
+            return_data = self._tackem_system.get_sql().select_by_row(self._thread_name,
+                                                                      INFO_DB["name"], self._db_id)
             self._release_id = return_data['release_id']
             disc_info_json = return_data['disc_data']
-            self._db.update(self._thread_name, INFO_DB["name"], self._db_id,
-                            {"ripped":False, "ready_to_convert":False, "ready_to_rename":False,
-                             "ready_for_library":False, "completed":False})
+            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+                                                 {"ripped":False, "ready_to_convert":False,
+                                                  "ready_to_rename":False,
+                                                  "ready_for_library":False, "completed":False})
             if disc_info_json is not None:
                 self._disc_info = json.loads(disc_info_json)
                 return
         else:
-            self._db.insert(self._thread_name, INFO_DB["name"], basic_info)
-            self._db_id = self._db.table_has_row(self._thread_name, INFO_DB["name"], basic_info)
+            self._tackem_system.get_sql().insert(self._thread_name, INFO_DB["name"], basic_info)
+            self._db_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+                                                                      INFO_DB["name"], basic_info)
         if self._disc_info is None:
-            data = self._musicbrainz.get_data_for_discid(self._disc_id)
+            data = self._tackem_system.get_musicbrainz().get_data_for_discid(self._disc_id)
             if data.get("release-count", 0) == 1:
                 self._disc_info = data['release-list'][0]
                 self._release_id = self._disc_info['id']
@@ -73,7 +76,8 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
                 "release_id": self._release_id,
                 "disc_data": self._disc_info,
             }
-            self._db.update(self._thread_name, INFO_DB["name"], self._db_id, data_to_save)
+            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"],
+                                                 self._db_id, data_to_save)
 
 
 #####################
@@ -114,6 +118,7 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
         self._set_drive_status("Ripping Disc")
         self._rip_disc()
         self._set_drive_status("idle")
-        self._db.update(self._thread_name, INFO_DB["name"], self._db_id, {"ripped":True})
+        self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+                                             {"ripped":True})
         if self._release_id:
             self._send_to_next_system()

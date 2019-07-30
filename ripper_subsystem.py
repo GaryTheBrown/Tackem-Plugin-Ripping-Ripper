@@ -2,10 +2,9 @@
 
 class RipperSubSystem():
     '''Subsystem controller'''
-    def __init__(self, device, config, db, thread_name, set_drive_status, thread_run):
+    def __init__(self, device, tackem_system, thread_name, set_drive_status, thread_run):
         self._device = device
-        self._config = config
-        self._db = db
+        self._tackem_system = tackem_system
         self._thread_name = thread_name
         self._thread_run = thread_run
         self._set_drive_status = set_drive_status

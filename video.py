@@ -12,8 +12,8 @@ from .data.events import RipperEvents
 
 class Video(RipperSubSystem, metaclass=ABCMeta):
     '''video ripping controller'''
-    def __init__(self, device, config, db, thread_name, disc_type, set_drive_status, thread_run):
-        super().__init__(device, config, db, thread_name, set_drive_status, thread_run)
+    def __init__(self, device, tackem_system, thread_name, disc_type, set_drive_status, thread_run):
+        super().__init__(device, tackem_system, thread_name, set_drive_status, thread_run)
         self._disc_info_lock = threading.Lock()
         self._disc_info_uuid = None
         self._disc_info_label = None
@@ -40,32 +40,38 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
         sha256 = self._disc_info_sha256
         disc_type = self._disc_type
         basic_info = {"uuid":uuid, "label":label, "sha256": sha256, "disc_type": disc_type}
-        self._db_id = self._db.table_has_row(self._thread_name, INFO_DB["name"], basic_info)
+        self._db_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+                                                                  INFO_DB["name"], basic_info)
         if self._db_id:
-            return_data = self._db.select_by_row(self._thread_name, INFO_DB["name"], self._db_id)
+            return_data = self._tackem_system.get_sql().select_by_row(self._thread_name,
+                                                                      INFO_DB["name"], self._db_id)
             rip_data_json = return_data['rip_data']
-            self._db.update(self._thread_name, INFO_DB["name"], self._db_id,
-                            {"ripped":False, "ready_to_convert":False, "ready_to_rename":False,
-                             "ready_for_library":False, "completed":False})
+            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+                                                 {"ripped":False, "ready_to_convert":False,
+                                                  "ready_to_rename":False,
+                                                  "ready_for_library":False, "completed":False})
             if rip_data_json is not None:
                 self._disc_rip_info = make_disc_type(json.loads(rip_data_json))
                 return
         else:
-            self._db.insert(self._thread_name, INFO_DB["name"], basic_info)
-            self._db_id = self._db.table_has_row(self._thread_name, INFO_DB["name"], basic_info)
+            self._tackem_system.get_sql().insert(self._thread_name, INFO_DB["name"], basic_info)
+            self._db_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+                                                                      INFO_DB["name"], basic_info)
         rip_list = apiaccess_video_disc_id(uuid, label)
         if isinstance(rip_list, str):
             self._disc_rip_info = make_disc_type(json.loads(rip_list))
-            self._db.update(self._thread_name, INFO_DB["name"], self._db_id, {"rip_data":rip_list})
+            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"],
+                                                 self._db_id, {"rip_data":rip_list})
 
 #################
 ##MAKEMKV CALLS##
 #################
     def _call_makemkv_backup(self):
         '''run the makemkv backup function thread safe'''
-        temp_location = self._config['locations']['videoripping']
+        temp_location = self._tackem_system.config()['locations']['videoripping']
         if temp_location[0] != "/":
-            temp_location = PROGRAMCONFIGLOCATION + self._config['locations']['videoripping']
+            temp_location = PROGRAMCONFIGLOCATION
+            temp_location += self._tackem_system.config()['locations']['videoripping']
         temp_dir = temp_location + str(self._db_id)
         if isinstance(self._disc_rip_info, list):
             for idx, track in enumerate(self._disc_rip_info):
@@ -76,7 +82,8 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
         elif self._disc_rip_info is None:
             self._makemkv_backup_from_disc(temp_dir)
         self._set_drive_status("idle")
-        self._db.update(self._thread_name, INFO_DB["name"], self._db_id, {"ripped":True})
+        self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"],
+                                             self._db_id, {"ripped":True})
         return True
 
     @abstractmethod
@@ -88,15 +95,16 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
 #######################
     def _send_to_next_system(self):
         '''method to send info to the next step in the process'''
-        if self._config['converter']['enabled']:
-            create_video_converter_row(self._db, self._thread_name, self._db_id,
-                                       self._disc_rip_info, self._config['videoripping']['torip'])
-            self._db.update(self._thread_name, INFO_DB["name"], self._db_id,
-                            {"ready_to_convert":True})
+        if self._tackem_system.config()['converter']['enabled']:
+            create_video_converter_row(self._tackem_system, self._thread_name, self._db_id,
+                                       self._disc_rip_info,
+                                       self._tackem_system.config()['videoripping']['torip'])
+            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+                                                 {"ready_to_convert":True})
             RipperEvents().converter.set()
         else:
-            self._db.update(self._thread_name, INFO_DB["name"], self._db_id,
-                            {"ready_to_rename":True})
+            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+                                                 {"ready_to_rename":True})
             RipperEvents().renamer.set()
 ##########
 ##Script##

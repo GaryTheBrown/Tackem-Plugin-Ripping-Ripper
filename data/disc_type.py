@@ -288,10 +288,10 @@ def make_blank_disc_type(disc_type_code):
     '''make the blank disc type'''
     if disc_type_code.replace(" ", "").lower() == "movie":
         return MovieDiscType("", "", 0, "", None, "en", "")
-    elif disc_type_code.replace(" ", "").lower() == "tvshow":
+    if disc_type_code.replace(" ", "").lower() == "tvshow":
         return TVShowDiscType("", "", "", None, "en", "")
-    elif disc_type_code.replace(" ", "").lower() == "documentary":
+    if disc_type_code.replace(" ", "").lower() == "documentary":
         return DocumentaryDiscType("", "", None, "en")
-    elif disc_type_code.replace(" ", "").lower() == "other":
+    if disc_type_code.replace(" ", "").lower() == "other":
         return OtherDiscType("", "", None, "en")
     return None

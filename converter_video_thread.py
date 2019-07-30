@@ -12,29 +12,29 @@ from .presets import get_video_preset_command
 
 class ConverterVideoThread():
     '''Master Section for the Video Converter controller'''
-    def __init__(self, item, config, root_config, db, tasks_sema):
+    def __init__(self, item, tackem_system, tasks_sema):
         self._id = item['id']
         self._filename = item['filename']
         self._disc_info = item['disc_info']
         self._track_info = item['track_info']
-        self._config = config
-        self._root_config = root_config
-        self._db = db
+        self._tackem_system = tackem_system
         self._tasks_sema = tasks_sema
         self._thread = threading.Thread(target=self.run, args=())
         self._thread_name = "Converter Task " + str(self._id)
         self._thread.setName(self._thread_name)
         self._thread_run = False
         self._task_done = False
-        self._sql_row_id = self._db.table_has_row(self._thread_name, VIDEO_CONVERT_DB["name"],
-                                                  {"id":self._id})
-        temp_location = self._config['locations']['videoripping']
+        self._sql_row_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+                                                                       VIDEO_CONVERT_DB["name"],
+                                                                       {"id":self._id})
+        temp_location = self._tackem_system.config()['locations']['videoripping']
         if temp_location[0] != "/":
-            temp_location = PROGRAMCONFIGLOCATION + self._config['locations']['videoripping']
+            temp_location = PROGRAMCONFIGLOCATION
+            temp_location += self._tackem_system.config()['locations']['videoripping']
         self._infile = temp_location + self._filename
         self._outfile = self._infile.replace(".mkv", "") + ".NEW.mkv"
         self._disc_language = Languages().convert_2_to_3t(self._disc_info.language())
-        self._conf = self._config['converter']
+        self._conf = self._tackem_system.config()['converter']
         self._probe_info = FFprobe(self._conf['ffprobelocation'], self._infile)
         self._command = []
         self._frame_count = None
@@ -105,9 +105,8 @@ class ConverterVideoThread():
             os.rename(self._outfile, self._infile)
             if not self._conf['keeporiginalfile']:
                 os.remove(self._infile + ".OLD")
-            self._db.update(self._thread_name,
-                            VIDEO_CONVERT_DB["name"],
-                            self._sql_row_id, {"converted":True})
+            self._tackem_system.get_sql().update(self._thread_name, VIDEO_CONVERT_DB["name"],
+                                                 self._sql_row_id, {"converted":True})
         self._task_done = True
         self._tasks_sema.release()
 
@@ -125,7 +124,7 @@ class ConverterVideoThread():
 
         #Deal with tagging here
         if self._conf['videoinserttags']:
-            scraper = Scraper(self._root_config)
+            scraper = Scraper()
             disc_type = self._disc_info.disc_type()
             track_type = self._track_info.video_type()
             tags = []

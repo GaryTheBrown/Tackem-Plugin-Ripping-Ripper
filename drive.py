@@ -8,14 +8,11 @@ from .www import html_parts
 
 class Drive(metaclass=ABCMeta):
     '''Master Section for the Drive controller'''
-    def __init__(self, cfg_name, device_info, config, baseurl, db, musicbrainz):
+    def __init__(self, cfg_name, device_info, tackem_system):
         self._cfg_name = cfg_name
         self._device_info = device_info
         self._device = device_info['link']
-        self._config = config
-        self._baseurl = baseurl
-        self._db = db
-        self._musicbrainz = musicbrainz
+        self._tackem_system = tackem_system
 
         self._thread = threading.Thread(target=self.run, args=())
         self._thread.setName("Ripper:" + self._device)
@@ -207,7 +204,8 @@ class Drive(metaclass=ABCMeta):
     def html_data(self, return_json=True):
         '''returns the data as json or dict for html'''
         return_dict = {}
-        image_folder = self._baseurl + "ripping/ripper/static/images/"
+        baseurl = self._tackem_system.get_config(["webui", "baseurl"], "/")
+        image_folder = baseurl + "ripping/ripper/static/images/"
         tray_status = self.get_tray_status()
         if tray_status == "empty":
             return_dict["traystatus"] = image_folder + "empty.png"
