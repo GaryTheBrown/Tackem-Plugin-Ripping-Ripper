@@ -16,7 +16,7 @@ class VideoLabeler(HTMLTEMPLATE):
 
     def _return(self):
         '''return on fail'''
-        raise cherrypy.HTTPRedirect(self._baseurl + "ripping/ripper/")
+        raise cherrypy.HTTPRedirect(self._tackem_system.get_baseurl() + "ripping/ripper/")
 
     @cherrypy.expose
     def index(self):
@@ -26,38 +26,40 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single labeler item'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if index is None:
             self._return()
         try:
             index_int = int(index)
         except ValueError:
             self._return()
-        data = self._system.get_video_labeler().get_data_by_id("WWW" + cherrypy.request.remote.ip,
-                                                               index_int)
+        thread_name = "WWW" + cherrypy.request.remote.ip
+        data = self._tackem_system.system().get_video_labeler().get_data_by_id(thread_name,
+                                                                               index_int)
         if data is False:
             self._return()
-        return html_parts.video_labeler_item(data, self._baseurl)
+        return html_parts.video_labeler_item(data, self._tackem_system.get_baseurl())
 
     @cherrypy.expose
     def getids(self):
         '''index of discs to label'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         db_label = "WWW" + cherrypy.request.remote.ip
-        return json.dumps(self._system.get_video_labeler().get_ids(db_label))
+        return json.dumps(self._tackem_system.system().get_video_labeler().get_ids(db_label))
 
     @cherrypy.expose
     def edit(self, index=None):
         '''edit the data page'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if index is None:
             self._return()
         try:
             index_int = int(index)
         except ValueError:
             self._return()
-        data = self._system.get_video_labeler().get_data_by_id("WWW" + cherrypy.request.remote.ip,
-                                                               index_int)
+        thread_name = "WWW" + cherrypy.request.remote.ip
+        data = self._tackem_system.system().get_video_labeler().get_data_by_id(thread_name,
+                                                                               index_int)
         if data is False:
             self._return()
 
@@ -101,22 +103,23 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def editdisctype(self, index=None, disc_type_code=None):
         '''gets the disc type html'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if index is None:
             self._return()
         try:
             index_int = int(index)
         except ValueError:
             self._return()
-        data = self._system.get_video_labeler().get_data_by_id("WWW" + cherrypy.request.remote.ip,
-                                                               index_int)
+        thread_name = "WWW" + cherrypy.request.remote.ip
+        data = self._tackem_system.system().get_video_labeler().get_data_by_id(thread_name,
+                                                                               index_int)
         if data is False:
             self._return()
         if disc_type_code is None:
             self._return()
         if disc_type_code == "change":
-            self._system.get_video_labeler().clear_rip_data("WWW" + cherrypy.request.remote.ip,
-                                                            index_int)
+            self._tackem_system.system().get_video_labeler().clear_rip_data(thread_name,
+                                                                            index_int)
         return self._edit_disc_type_work(data, disc_type_code)
 
     def _edit_disc_type_work(self, data, disc_type_code):
@@ -138,7 +141,8 @@ class VideoLabeler(HTMLTEMPLATE):
                     self._return()
             else:
                 label = rip_data.name()
-            search = self._global_config['scraper']['enabled']
+
+            search = self._tackem_system.get_config(['scraper', 'enabled'], True)
             disc_type_code_label = disc_type_code
             for key in disc_type.TYPES:
                 if key.replace(" ", "").lower() == disc_type_code:
@@ -185,7 +189,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def edittracktype(self, disc_index=None, track_index=None, track_type_code=None):
         '''gets the disc type html'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if disc_index is None or track_index is None:
             self._return()
         try:
@@ -193,8 +197,9 @@ class VideoLabeler(HTMLTEMPLATE):
             track_index_int = int(track_index)
         except ValueError:
             self._return()
-        data = self._system.get_video_labeler().get_data_by_id("WWW" + cherrypy.request.remote.ip,
-                                                               disc_index_int)
+        thread_name = "WWW" + cherrypy.request.remote.ip
+        data = self._tackem_system.system().get_video_labeler().get_data_by_id(thread_name,
+                                                                               disc_index_int)
         if data is False:
             self._return()
         if track_type_code is None:
@@ -208,8 +213,8 @@ class VideoLabeler(HTMLTEMPLATE):
                 track_data = rip_data["tracks"][track_index_int]
         if track_data and track_type_code == "change":
             db_label = "WWW" + cherrypy.request.remote.ip
-            self._system.get_video_labeler().clear_rip_track_data(db_label, disc_index_int,
-                                                                  track_index_int)
+            video_labeler = self._tackem_system.system().get_video_labeler()
+            video_labeler.clear_rip_track_data(db_label, disc_index_int, track_index_int)
         location = self._config['locations']['videoripping']
         if location[0] != "/":
             location = PROGRAMCONFIGLOCATION + self._config['locations']['videoripping']
@@ -232,7 +237,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def editsave(self, **kwargs):
         '''saves the disc type'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         for key in kwargs:
             if kwargs[key] == "True":
                 kwargs[key] = True
@@ -267,6 +272,7 @@ class VideoLabeler(HTMLTEMPLATE):
 
         rip_data = disc_type.make_disc_type(data)
         finished = "complete" in kwargs
-        self._system.get_video_labeler().set_data("WWW" + cherrypy.request.remote.ip,
-                                                  kwargs['discid'], rip_data, finished)
+        thread_name = "WWW" + cherrypy.request.remote.ip
+        self._tackem_system.system().get_video_labeler().set_data(thread_name, kwargs['discid'],
+                                                                  rip_data, finished)
         self._return()

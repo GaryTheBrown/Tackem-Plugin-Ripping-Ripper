@@ -290,8 +290,8 @@ Do you want to keep the chapter points?"""),
 class Plugin(PluginBaseClass):
     '''Main Class to create an instance of the plugin'''
 
-    def __init__(self, system_name, instance=False):
-        super().__init__(system_name, instance)
+    def __init__(self, system_name, single_instance=False):
+        super().__init__(system_name, single_instance)
         self._drives = []
         self._video_labeler = VideoLabeler(self._tackem_system)
         self._converter = None
@@ -313,8 +313,6 @@ class Plugin(PluginBaseClass):
                 if drive in self._tackem_system.config()['drives']:
                     if self._tackem_system.config()['drives'][drive]["enabled"]:
                         self._drives.append(DriveLinux(drive, DRIVES[drive], self._tackem_system))
-                                                       #self._config, self._root_config,
-                                                       #baseurl, self._db))
 
         #Check if Devices Exist and if not it will stop the plugin from loading
         if not self._drives:

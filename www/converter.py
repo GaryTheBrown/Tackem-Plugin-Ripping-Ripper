@@ -10,7 +10,7 @@ class Converter(HTMLTEMPLATE):
 
     def _return(self):
         '''return on fail'''
-        raise cherrypy.HTTPRedirect(self._baseurl + "ripping/ripper/")
+        raise cherrypy.HTTPRedirect(self._tackem_system.get_baseurl() + "ripping/ripper/")
 
     @cherrypy.expose
     def index(self):
@@ -20,14 +20,14 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single converter item'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if index is None:
             self._return()
         try:
             index_int = int(index)
         except ValueError:
             self._return()
-        data = self._system.get_converter().get_data_by_id(index_int)
+        data = self._tackem_system.system().get_converter().get_data_by_id(index_int)
         if data is False:
             self._return()
         return html_parts.converter_item(data)
@@ -35,32 +35,32 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def getids(self):
         '''index of Drives'''
-        self._auth.check_auth()
-        return json.dumps(self._system.get_converter().get_data_ids())
+        self._tackem_system.get_auth().check_auth()
+        return json.dumps(self._tackem_system.system().get_converter().get_data_ids())
 
     @cherrypy.expose
     def getconverting(self, index=None):
         '''get single converter item'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if index is None:
             self._return()
         try:
             index_int = int(index)
         except ValueError:
             self._return()
-        return str(self._system.get_converter().get_converting_by_id(index_int))
+        return str(self._tackem_system.system().get_converter().get_converting_by_id(index_int))
 
     @cherrypy.expose
     def progress(self, index=None):
         '''get progress bar item'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if index is None:
             self._return()
         try:
             index_int = int(index)
         except ValueError:
             self._return()
-        data = self._system.get_converter().get_data_by_id(index_int)
+        data = self._tackem_system.system().get_converter().get_data_by_id(index_int)
         if data is False:
             self._return()
         if data['converting']:
@@ -68,5 +68,4 @@ class Converter(HTMLTEMPLATE):
             label += "(" + str(data['percent']) + "%)"
             return ghtml_parts.progress_bar(label, str(data['process']), str(data['count']),
                                             data['percent'])
-        else:
-            return ""
+        return ""

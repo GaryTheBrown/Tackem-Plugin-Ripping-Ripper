@@ -7,7 +7,7 @@ class Drives(HTMLTEMPLATE):
 
     def _return(self):
         '''return on fail'''
-        raise cherrypy.HTTPRedirect(self._baseurl + "ripping/ripper/")
+        raise cherrypy.HTTPRedirect(self._tackem_system.get_baseurl() + "ripping/ripper/")
 
     @cherrypy.expose
     def index(self):
@@ -17,15 +17,15 @@ class Drives(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single Drive'''
-        self._auth.check_auth()
+        self._tackem_system.get_auth().check_auth()
         if index is None:
             self._return()
         try:
             index_int = int(index)
         except ValueError:
             self._return()
-        drives = self._system.get_drives()
+        drives = self._tackem_system.system().get_drives()
         if index_int > len(drives):
             self._return()
-        drive = self._system.get_drives()[index_int]
+        drive = self._tackem_system.system().get_drives()[index_int]
         return drive.html_data()
