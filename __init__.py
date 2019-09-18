@@ -180,7 +180,7 @@ Do you want to add in the tags to the Video Files?"""),
 The range of the CRF (8 bit) scale is 0–51, where 0 is lossless, 23 is the default,and 51 is worst
 quality possible. A lower value generally leads to higher quality, and a subjectively sane range is
 17–28. Consider 17 or 18 to be visually lossless or nearly so; it should look the same or nearly the
-same as the input but it isn't technically lossless. The range is exponential, so increasing the CRF 
+same as the input but it isn't technically lossless. The range is exponential, so increasing the CRF
 value +6 results in roughly half the bitrate / file size, while -6 leads to roughly twice the
 bitrate. Choose the highest CRF value that still provides an acceptable quality. If the output looks
 good, then try a higher value. If it looks bad, choose a lower value."""),
@@ -290,7 +290,7 @@ Do you want to keep the chapter points?"""),
 class Plugin(PluginBaseClass):
     '''Main Class to create an instance of the plugin'''
 
-    def __init__(self, system_name, single_instance=False):
+    def __init__(self, system_name, single_instance=SETTINGS['single_instance']):
         super().__init__(system_name, single_instance)
         self._drives = []
         self._video_labeler = VideoLabeler(self._tackem_system)
