@@ -23,7 +23,7 @@ from .converter import Converter
 from .renamer import Renamer
 from .presets import video_presets_config_options
 
-SETTINGS = load_plugin_settings(PLUGINFOLDERLOCATION + "ripping/ripper/setting.json")
+SETTINGS = load_plugin_settings(PLUGINFOLDERLOCATION + "ripping/ripper/settings.json")
 DRIVES = {}
 
 if platform.system() == 'Linux':
