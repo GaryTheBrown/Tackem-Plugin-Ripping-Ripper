@@ -1,0 +1,9 @@
+{
+    "single_instance":true,
+    "webui":true,
+    "api":true,
+    "type":"ripping",
+    "platform": ["Linux"],
+    "linux_programs": ["hwinfo", "makemkvcon", "java", "ccextractor", "ffmpeg", "ffprobe",
+                       "mplayer", "eject", "lsblk", "hwinfo", "blkid"]
+}

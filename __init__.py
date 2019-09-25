@@ -5,8 +5,8 @@ import pathlib
 import threading
 from configobj import ConfigObj
 from validate import Validator
-from libs.startup_arguments import PROGRAMCONFIGLOCATION
-from libs.plugin_base import PluginBaseClass
+from libs.startup_arguments import PROGRAMCONFIGLOCATION, PLUGINFOLDERLOCATION
+from libs.plugin_base import PluginBaseClass, load_plugin_settings
 from libs.config_list import ConfigList
 from libs.config_object import ConfigObject
 from libs.config_option import ConfigOption
@@ -23,26 +23,17 @@ from .converter import Converter
 from .renamer import Renamer
 from .presets import video_presets_config_options
 
-SETTINGS = {
-    'single_instance':True,
-    'webui':True,
-    'api':True,
-    'type':'ripping',
-    'platform': ['Linux']#, 'Darwin', 'Windows']
-}
+SETTINGS = load_plugin_settings(PLUGINFOLDERLOCATION + "ripping/ripper/setting.json")
 DRIVES = {}
 
-LINUX_PROGRAMS = ["hwinfo", "makemkvcon", "java", "ccextractor", "ffmpeg", "ffprobe", "mplayer",
-                  "eject", "lsblk", "hwinfo", "blkid"]
-
 if platform.system() == 'Linux':
-    if check_for_required_programs(LINUX_PROGRAMS, output=False):
+    if check_for_required_programs(SETTINGS['linux_programs'], output=False):
         DRIVES = get_hwinfo_linux()
 
 def check_enabled():
     '''plugin check for if plugin should be enabled'''
     if platform.system() == 'Linux':
-        if not check_for_required_programs(LINUX_PROGRAMS, "Ripper"):
+        if not check_for_required_programs(SETTINGS['linux_programs'], "Ripper"):
             return False
     return bool(DRIVES)
 
