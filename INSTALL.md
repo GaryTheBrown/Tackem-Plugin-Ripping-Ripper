@@ -15,7 +15,7 @@ make
 sudo make install
 ```
 
-###makemkv settings.conf
+### makemkv settings.conf
 ```
 app_DefaultSelectionString = "+sel:all"
 app_DefaultOutputFileName = "{t:N2}"
