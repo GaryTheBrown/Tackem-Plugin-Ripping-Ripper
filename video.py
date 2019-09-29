@@ -40,13 +40,13 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
         sha256 = self._disc_info_sha256
         disc_type = self._disc_type
         basic_info = {"uuid":uuid, "label":label, "sha256": sha256, "disc_type": disc_type}
-        self._db_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+        self._db_id = self._tackem_system.sql.table_has_row(self._thread_name,
                                                                   INFO_DB["name"], basic_info)
         if self._db_id:
-            return_data = self._tackem_system.get_sql().select_by_row(self._thread_name,
+            return_data = self._tackem_system.sql.select_by_row(self._thread_name,
                                                                       INFO_DB["name"], self._db_id)
             rip_data_json = return_data['rip_data']
-            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+            self._tackem_system.sql.update(self._thread_name, INFO_DB["name"], self._db_id,
                                                  {"ripped":False, "ready_to_convert":False,
                                                   "ready_to_rename":False,
                                                   "ready_for_library":False, "completed":False})
@@ -54,13 +54,13 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
                 self._disc_rip_info = make_disc_type(json.loads(rip_data_json))
                 return
         else:
-            self._tackem_system.get_sql().insert(self._thread_name, INFO_DB["name"], basic_info)
-            self._db_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+            self._tackem_system.sql.insert(self._thread_name, INFO_DB["name"], basic_info)
+            self._db_id = self._tackem_system.sql.table_has_row(self._thread_name,
                                                                       INFO_DB["name"], basic_info)
         rip_list = apiaccess_video_disc_id(uuid, label)
         if isinstance(rip_list, str):
             self._disc_rip_info = make_disc_type(json.loads(rip_list))
-            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"],
+            self._tackem_system.sql.update(self._thread_name, INFO_DB["name"],
                                                  self._db_id, {"rip_data":rip_list})
 
 #################
@@ -82,7 +82,7 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
         elif self._disc_rip_info is None:
             self._makemkv_backup_from_disc(temp_dir)
         self._set_drive_status("idle")
-        self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"],
+        self._tackem_system.sql.update(self._thread_name, INFO_DB["name"],
                                              self._db_id, {"ripped":True})
         return True
 
@@ -99,11 +99,11 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
             create_video_converter_row(self._tackem_system, self._thread_name, self._db_id,
                                        self._disc_rip_info,
                                        self._tackem_system.config()['videoripping']['torip'])
-            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+            self._tackem_system.sql.update(self._thread_name, INFO_DB["name"], self._db_id,
                                                  {"ready_to_convert":True})
             RipperEvents().converter.set()
         else:
-            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], self._db_id,
+            self._tackem_system.sql.update(self._thread_name, INFO_DB["name"], self._db_id,
                                                  {"ready_to_rename":True})
             RipperEvents().renamer.set()
 ##########

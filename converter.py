@@ -108,7 +108,7 @@ class Converter():
     def _get_video_tasks(self):
         '''Grab video tasks and append them to the list'''
         check = {"converted":False}
-        return_data = self._tackem_system.get_sql().select(self._thread_name,
+        return_data = self._tackem_system.sql.select(self._thread_name,
                                                            VIDEO_CONVERT_DB["name"], check)
         data = []
         if return_data:
@@ -131,20 +131,20 @@ class Converter():
 
     def _clear_video_tasks(self):
         '''clears the video tasks from the database when done'''
-        discs = [x['id'] for x in self._tackem_system.get_sql().select(self._thread_name,
+        discs = [x['id'] for x in self._tackem_system.sql.select(self._thread_name,
                                                                        INFO_DB["name"],
                                                                        {"ready_to_convert":True,
                                                                         "ready_to_rename": False},
                                                                        "id")]
-        convert_data = self._tackem_system.get_sql().select(self._thread_name,
+        convert_data = self._tackem_system.sql.select(self._thread_name,
                                                             VIDEO_CONVERT_DB["name"])
         wake_renamer = False
         for disc in discs:
             if all([item['converted'] for item in convert_data if item['info_id'] == disc]):
-                self._tackem_system.get_sql().delete_where(self._thread_name,
+                self._tackem_system.sql.delete_where(self._thread_name,
                                                            VIDEO_CONVERT_DB["name"],
                                                            {"disc_id":disc})
-                self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], disc,
+                self._tackem_system.sql.update(self._thread_name, INFO_DB["name"], disc,
                                                      {"ready_to_rename":True})
                 wake_renamer = True
         return wake_renamer
@@ -179,7 +179,7 @@ def create_video_converter_row(tackem_system, thread_name, info_id, disc_rip_inf
                 "disc_info":disc_info,
                 "track_info":json.dumps(track.make_dict())
             }
-            tackem_system.get_sql().insert(thread_name, VIDEO_CONVERT_DB["name"], to_save)
+            tackem_system.sql.insert(thread_name, VIDEO_CONVERT_DB["name"], to_save)
 
 def create_audiocd_converter_row(tackem_system, thread_name, info_id, disc_rip_info):
     '''Function to add Audio CD tracks to Convertor DB'''

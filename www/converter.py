@@ -20,7 +20,7 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single converter item'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if index is None:
             self._return()
         try:
@@ -35,13 +35,13 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def getids(self):
         '''index of Drives'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         return json.dumps(self._tackem_system.system().get_converter().get_data_ids())
 
     @cherrypy.expose
     def getconverting(self, index=None):
         '''get single converter item'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if index is None:
             self._return()
         try:
@@ -53,7 +53,7 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def progress(self, index=None):
         '''get progress bar item'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if index is None:
             self._return()
         try:

@@ -56,7 +56,7 @@ class Renamer():
     def _video_renamer(self):
         '''the renamer function for the video files'''
         check = {"ready_to_rename":True}
-        return_data = self._tackem_system.get_sql().select(self._thread_name,
+        return_data = self._tackem_system.sql.select(self._thread_name,
                                                            INFO_DB["name"], check)
         for item in return_data:
             rip_data = make_disc_type(json.loads(item['rip_data']))
@@ -97,7 +97,7 @@ class Renamer():
                 final_out_file = out_folder + out_file
                 os.rename(in_file, final_out_file)
 
-            self._tackem_system.get_sql().update(self._thread_name, INFO_DB["name"], item['id'],
+            self._tackem_system.sql.update(self._thread_name, INFO_DB["name"], item['id'],
                                                  {"ready_for_library":True})
             if not self._thread_run:
                 return

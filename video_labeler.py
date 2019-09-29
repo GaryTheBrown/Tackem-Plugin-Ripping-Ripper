@@ -17,14 +17,14 @@ class VideoLabeler():
     def get_count(self, thread_name):
         '''returns the data as dict for html'''
         dict_of_values = {"ripped":True, "ready_to_convert":False, "ready_to_rename":False}
-        return self._tackem_system.get_sql().count_where(thread_name, INFO_DB["name"],
+        return self._tackem_system.sql.count_where(thread_name, INFO_DB["name"],
                                                          dict_of_values)
 
     def get_ids(self, thread_name):
         '''returns the data as dict for html'''
         dict_of_values = {"ripped":True, "ready_to_convert":False, "ready_to_rename":False}
         return_values = ["id"]
-        return_data = self._tackem_system.get_sql().select(thread_name, INFO_DB["name"],
+        return_data = self._tackem_system.sql.select(thread_name, INFO_DB["name"],
                                                            dict_of_values, return_values)
         return [item['id'] for item in return_data]
 
@@ -32,12 +32,12 @@ class VideoLabeler():
         '''returns the data as dict for html'''
         dict_of_values = {"ripped":True, "ready_to_convert":False, "ready_to_rename":False}
         return_values = ["id", "uuid", "label", "disc_type", "rip_data"]
-        return self._tackem_system.get_sql().select(thread_name, INFO_DB["name"],
+        return self._tackem_system.sql.select(thread_name, INFO_DB["name"],
                                                     dict_of_values, return_values)
 
     def get_data_by_id(self, thread_name, db_id):
         '''returns the data by id as dict for html'''
-        data = self._tackem_system.get_sql().select_by_row(thread_name, INFO_DB["name"], db_id)
+        data = self._tackem_system.sql.select_by_row(thread_name, INFO_DB["name"], db_id)
         if data is False:
             return False
         if data["ripped"] is False:
@@ -59,13 +59,13 @@ class VideoLabeler():
         dict_for_db = {"rip_data":rip_data}
         if finished:
             if self._tackem_system.config()['converter']['enabled']:
-                create_video_converter_row(self._tackem_system.get_sql(), thread_name, db_id, data,
+                create_video_converter_row(self._tackem_system.sql, thread_name, db_id, data,
                                            self._tackem_system.config()['videoripping']['torip'])
                 dict_for_db["ready_to_convert"] = True
             else:
                 dict_for_db["ready_to_rename"] = True
 
-        self._tackem_system.get_sql().update(thread_name, INFO_DB["name"], db_id, dict_for_db)
+        self._tackem_system.sql.update(thread_name, INFO_DB["name"], db_id, dict_for_db)
 
         if finished:
             if self._tackem_system.config()['converter']['enabled']:
@@ -75,11 +75,11 @@ class VideoLabeler():
 
     def clear_rip_data(self, thread_name, db_id):
         '''Clears the rip data from the database'''
-        self._tackem_system.get_sql().update(thread_name, INFO_DB["name"], db_id, {"rip_data":None})
+        self._tackem_system.sql.update(thread_name, INFO_DB["name"], db_id, {"rip_data":None})
 
     def clear_rip_track_data(self, thread_name, db_id, track_id):
         '''Clears the rip data from the database'''
-        data = self._tackem_system.get_sql().select_by_row(thread_name, INFO_DB["name"],
+        data = self._tackem_system.sql.select_by_row(thread_name, INFO_DB["name"],
                                                            db_id, ["rip_data"])
         rip_data = json.loads(data['rip_data'])
         if isinstance(rip_data, dict):
@@ -87,5 +87,5 @@ class VideoLabeler():
                 if len(rip_data["tracks"]) >= track_id:
                     rip_data["tracks"][track_id] = None
                     to_save = json.dumps(rip_data)
-                    self._tackem_system.get_sql().update(thread_name, INFO_DB["name"],
+                    self._tackem_system.sql.update(thread_name, INFO_DB["name"],
                                                          db_id, {"rip_data":to_save})

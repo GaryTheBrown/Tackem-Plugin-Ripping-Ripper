@@ -26,7 +26,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single labeler item'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if index is None:
             self._return()
         try:
@@ -43,14 +43,14 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def getids(self):
         '''index of discs to label'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         db_label = "WWW" + cherrypy.request.remote.ip
         return json.dumps(self._tackem_system.system().get_video_labeler().get_ids(db_label))
 
     @cherrypy.expose
     def edit(self, index=None):
         '''edit the data page'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if index is None:
             self._return()
         try:
@@ -103,7 +103,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def editdisctype(self, index=None, disc_type_code=None):
         '''gets the disc type html'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if index is None:
             self._return()
         try:
@@ -189,7 +189,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def edittracktype(self, disc_index=None, track_index=None, track_type_code=None):
         '''gets the disc type html'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if disc_index is None or track_index is None:
             self._return()
         try:
@@ -237,7 +237,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def editsave(self, **kwargs):
         '''saves the disc type'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         for key in kwargs:
             if kwargs[key] == "True":
                 kwargs[key] = True

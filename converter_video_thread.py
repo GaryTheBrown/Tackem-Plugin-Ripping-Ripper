@@ -24,7 +24,7 @@ class ConverterVideoThread():
         self._thread.setName(self._thread_name)
         self._thread_run = False
         self._task_done = False
-        self._sql_row_id = self._tackem_system.get_sql().table_has_row(self._thread_name,
+        self._sql_row_id = self._tackem_system.sql.table_has_row(self._thread_name,
                                                                        VIDEO_CONVERT_DB["name"],
                                                                        {"id":self._id})
         temp_location = self._tackem_system.config()['locations']['videoripping']
@@ -105,7 +105,7 @@ class ConverterVideoThread():
             os.rename(self._outfile, self._infile)
             if not self._conf['keeporiginalfile']:
                 os.remove(self._infile + ".OLD")
-            self._tackem_system.get_sql().update(self._thread_name, VIDEO_CONVERT_DB["name"],
+            self._tackem_system.sql.update(self._thread_name, VIDEO_CONVERT_DB["name"],
                                                  self._sql_row_id, {"converted":True})
         self._task_done = True
         self._tasks_sema.release()

@@ -288,8 +288,8 @@ class Plugin(PluginBaseClass):
         self._converter = None
         self._renamer = None
 
-        self._tackem_system.get_sql().table_checks("Ripper", db_tables.VIDEO_INFO_DB_INFO)
-        self._tackem_system.get_sql().table_checks("Ripper", db_tables.VIDEO_CONVERT_DB_INFO)
+        self._tackem_system.sql.table_checks("Ripper", db_tables.VIDEO_INFO_DB_INFO)
+        self._tackem_system.sql.table_checks("Ripper", db_tables.VIDEO_CONVERT_DB_INFO)
 
         for location in self._tackem_system.config()['locations']:
             folder = self._tackem_system.config()['locations'][location]

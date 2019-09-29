@@ -17,7 +17,7 @@ class Drives(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single Drive'''
-        self._tackem_system.get_auth().check_auth()
+        self._tackem_system.auth.check_auth()
         if index is None:
             self._return()
         try:
