@@ -22,7 +22,7 @@ def mounts(key, instance_name=None): # take tackem_system off the line and gener
     root.converter = Converter("Ripper Video Converter", key, tackem_system,
                                base_stylesheet=stylesheet)
     cherrypy.tree.mount(root,
-                        tackem_system.get_baseurl() + key.replace(" ", "/") + "/",
+                        tackem_system.baseurl + key.replace(" ", "/") + "/",
                         cfg(tackem_system.config()))
 
 def cfg(config):

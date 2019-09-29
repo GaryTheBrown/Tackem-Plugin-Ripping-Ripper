@@ -10,7 +10,7 @@ class Converter(HTMLTEMPLATE):
 
     def _return(self):
         '''return on fail'''
-        raise cherrypy.HTTPRedirect(self._tackem_system.get_baseurl() + "ripping/ripper/")
+        raise cherrypy.HTTPRedirect(self._tackem_system.baseurl + "ripping/ripper/")
 
     @cherrypy.expose
     def index(self):

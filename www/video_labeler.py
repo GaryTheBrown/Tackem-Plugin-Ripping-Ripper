@@ -16,7 +16,7 @@ class VideoLabeler(HTMLTEMPLATE):
 
     def _return(self):
         '''return on fail'''
-        raise cherrypy.HTTPRedirect(self._tackem_system.get_baseurl() + "ripping/ripper/")
+        raise cherrypy.HTTPRedirect(self._tackem_system.baseurl + "ripping/ripper/")
 
     @cherrypy.expose
     def index(self):
@@ -38,7 +38,7 @@ class VideoLabeler(HTMLTEMPLATE):
                                                                                index_int)
         if data is False:
             self._return()
-        return html_parts.video_labeler_item(data, self._tackem_system.get_baseurl())
+        return html_parts.video_labeler_item(data, self._tackem_system.baseurl)
 
     @cherrypy.expose
     def getids(self):

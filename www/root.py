@@ -9,7 +9,7 @@ class Root(HTMLTEMPLATE):
     def index(self):
         '''index of plugin'''
         self._tackem_system.get_auth().check_auth()
-        baseurl = self._tackem_system.get_baseurl()
+        baseurl = self._tackem_system.baseurl
         root_html = html_parts.get_page("root/index")
         drives_html = html_parts.drives(self._tackem_system.system().get_drives(),
                                         self._tackem_system.config()['drives'], True)
