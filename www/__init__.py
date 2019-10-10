@@ -23,9 +23,10 @@ def mounts(key, instance_name=None): # take tackem_system off the line and gener
                                base_stylesheet=stylesheet)
     cherrypy.tree.mount(root,
                         tackem_system.baseurl + key.replace(" ", "/") + "/",
-                        cfg(tackem_system.config)
+                        cherrypy_cfg(tackem_system.config)
+    )
 
-def cfg(config):
+def cherrypy_cfg(config):
     '''generate the cherrypy conf'''
     temp_video_location = config['locations']['videoripping']
     if config['locations']['videoripping'][0] != "/":
