@@ -6,36 +6,39 @@ import pexpect
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
 from libs.scraper.scraper_base import Scraper
 from libs.data.languages import Languages
+from libs.sql import Database
+from config_data import CONFIG
 from .data.db_tables import VIDEO_CONVERT_DB_INFO as VIDEO_CONVERT_DB
 from .ffprobe import FFprobe
 from .presets import get_video_preset_command
 
 class ConverterVideoThread():
     '''Master Section for the Video Converter controller'''
-    def __init__(self, item, tackem_system, tasks_sema):
+    def __init__(self, item, tasks_sema):
         self._id = item['id']
         self._filename = item['filename']
         self._disc_info = item['disc_info']
         self._track_info = item['track_info']
-        self._tackem_system = tackem_system
         self._tasks_sema = tasks_sema
         self._thread = threading.Thread(target=self.run, args=())
         self._thread_name = "Converter Task " + str(self._id)
         self._thread.setName(self._thread_name)
         self._thread_run = False
         self._task_done = False
-        self._sql_row_id = self._tackem_system.sql.table_has_row(self._thread_name,
-                                                                       VIDEO_CONVERT_DB["name"],
-                                                                       {"id":self._id})
-        temp_location = self._tackem_system.config()['locations']['videoripping']
-        if temp_location[0] != "/":
-            temp_location = PROGRAMCONFIGLOCATION
-            temp_location += self._tackem_system.config()['locations']['videoripping']
-        self._infile = temp_location + self._filename
+        self._sql_row_id = Database.sql().table_has_row(
+            self._thread_name,
+            VIDEO_CONVERT_DB["name"],
+            {"id":self._id}
+        )
+        loc = CONFIG['plugins']['ripping']['ripper']['locations']['videoripping'].value
+        if loc[0] != "/":
+            loc = PROGRAMCONFIGLOCATION
+            loc += CONFIG['plugins']['ripping']['ripper']['locations']['videoripping'].value
+        self._infile = loc + self._filename
         self._outfile = self._infile.replace(".mkv", "") + ".NEW.mkv"
         self._disc_language = Languages().convert_2_to_3t(self._disc_info.language())
-        self._conf = self._tackem_system.config()['converter']
-        self._probe_info = FFprobe(self._conf['ffprobelocation'], self._infile)
+        self._conf = CONFIG['plugins']['ripping']['ripper']['converter']
+        self._probe_info = FFprobe(self._conf['ffprobelocation'].value, self._infile)
         self._command = []
         self._frame_count = None
         self._frame_process = 0
@@ -103,10 +106,14 @@ class ConverterVideoThread():
         if self._do_conversion():
             os.rename(self._infile, self._infile + ".OLD")
             os.rename(self._outfile, self._infile)
-            if not self._conf['keeporiginalfile']:
+            if not self._conf['keeporiginalfile'].value:
                 os.remove(self._infile + ".OLD")
-            self._tackem_system.sql.update(self._thread_name, VIDEO_CONVERT_DB["name"],
-                                                 self._sql_row_id, {"converted":True})
+            Database.sql().update(
+                self._thread_name,
+                VIDEO_CONVERT_DB["name"],
+                self._sql_row_id,
+                {"converted":True}
+            )
         self._task_done = True
         self._tasks_sema.release()
 
@@ -118,12 +125,12 @@ class ConverterVideoThread():
         if os.path.exists(self._outfile):
             os.remove(self._outfile)
 
-        self._command.append(self._conf['ffmpeglocation'])
+        self._command.append(self._conf['ffmpeglocation'].value)
         self._command.append("-i")
         self._command.append('"' + self._infile + '"')
 
         #Deal with tagging here
-        if self._conf['videoinserttags']:
+        if self._conf['videoinserttags'].value:
             scraper = Scraper()
             disc_type = self._disc_info.disc_type()
             track_type = self._track_info.video_type()
@@ -173,7 +180,7 @@ class ConverterVideoThread():
         #Deal with chapters here
         if self._probe_info.has_chapters():
             self._command.append("-map_chapters")
-            if self._conf['keepchapters']:
+            if self._conf['keepchapters'].value:
                 self._command.append("0")
             else:
                 self._command.append("-1")
@@ -223,13 +230,13 @@ class ConverterVideoThread():
                     subtitle_count += 1
 
         #Deal with video resolution here
-        config_video_max_height = self._conf["videoresolution"]
+        config_video_max_height = self._conf["videoresolution"].value
         video_info = self._probe_info.get_video_info()
         video_height = video_info[0]['height']
 
         #Detection of 3d here
         if "stereo_mode" in video_info[0].get("tags", {}):
-            if self._conf['video3dtype'] != 'keep':
+            if self._conf['video3dtype'].value != 'keep':
                 aspect_ratio = video_info[0]['display_aspect_ratio'] # 4:3 or 16:9
                 type_3d_in = None
                 type_3d = video_info[0].get("tags", {}).get("stereo_mode", "mono")
@@ -278,7 +285,7 @@ class ConverterVideoThread():
                     # Both eyes laced in one Block, Right-eye view is first alternating frames
                     type_3d_in = 'ar'
                 if type_3d_in is not None:
-                    type_3d_out = self._conf['video3dtype']
+                    type_3d_out = self._conf['video3dtype'].value
                     self._command.append("-vf stereo3d=" + type_3d_in + ":" + type_3d_out)
                     if type_3d_out == "ml" or type_3d_out == "mr":
                         self._command.append('-metadata:s:v:0 stereo_mode="mono"')
@@ -291,36 +298,36 @@ class ConverterVideoThread():
                     self._command.append("-vf scale=-2:" + config_video_max_height)
 
         #Deal with video codec here
-        if self._conf['videocodec'] == "keep":
+        if self._conf['videocodec'].value == "keep":
             self._command.append('-c:v copy')
-        elif self._conf['videocodec'] == "x264default":
+        elif self._conf['videocodec'].value == "x264default":
             self._command.append('-c:v libx264')
-        elif self._conf['videocodec'] == "x265default":
+        elif self._conf['videocodec'].value == "x265default":
             self._command.append('-c:v libx265')
-        elif self._conf['videocodec'] == "x264custom":
+        elif self._conf['videocodec'].value == "x264custom":
             self._command.append('-c:v libx264')
             self._command.append('-preset')
-            self._command.append(self._conf['x26preset'])
+            self._command.append(self._conf['x26preset'].value)
             self._command.append('-crf')
             if "10le" in video_info[0].get("pix_fmt", ""):
-                self._command.append(str(self._conf['x26crf10bit']))
+                self._command.append(str(self._conf['x26crf10bit'].value))
             else:
-                self._command.append(str(self._conf['x26crf8bit']))
-            if self._conf['x26extra']:
-                self._command.append(str(self._conf['x26extra']))
-        elif self._conf['videocodec'] == "x265custom":
+                self._command.append(str(self._conf['x26crf8bit'].value))
+            if self._conf['x26extra'].value:
+                self._command.append(str(self._conf['x26extra'].value))
+        elif self._conf['videocodec'].value == "x265custom":
             self._command.append('-c:v libx265')
             self._command.append('-preset')
-            self._command.append(self._conf['x26preset'])
+            self._command.append(self._conf['x26preset'].value)
             self._command.append('-crf')
             if "10le" in video_info[0].get("pix_fmt", ""):
-                self._command.append(str(self._conf['x26crf10bit']))
+                self._command.append(str(self._conf['x26crf10bit'].value))
             else:
-                self._command.append(str(self._conf['x26crf8bit']))
-            if self._conf['x26extra']:
-                self._command.append(str(self._conf['x26extra']))
-        elif self._conf['videocodec'] == "preset":
-            video_command = get_video_preset_command(self._conf['videopreset'])
+                self._command.append(str(self._conf['x26crf8bit'].value))
+            if self._conf['x26extra'].value:
+                self._command.append(str(self._conf['x26extra'].value))
+        elif self._conf['videocodec'].value == "preset":
+            video_command = get_video_preset_command(self._conf['videopreset'].value)
             self._command.append(video_command)
 
         #tell ffmpeg to copy the audio
@@ -344,69 +351,69 @@ class ConverterVideoThread():
         if stream.stream_type() == "audio":
             if stream.duplicate():
                 return False
-            if self._conf["audiolanguage"] == "all":
-                if self._conf["audioformat"] == "all":
+            if self._conf["audiolanguage"].value == "all":
+                if self._conf["audioformat"].value == "all":
                     return True
-                if self._conf["audioformat"] == "highest":
+                if self._conf["audioformat"].value == "highest":
                     #TODO work out how to detect this
                     pass
-                elif self._conf["audioformat"] == "selected":
-                    if stream_format in self._conf['audioformats']:
+                elif self._conf["audioformat"].value == "selected":
+                    if stream_format in self._conf['audioformats'].value:
                         return True
-            elif self._conf["audiolanguage"] == "original":
+            elif self._conf["audiolanguage"].value == "original":
                 if stream_language == self._disc_language:
-                    if self._conf["audioformat"] == "all":
+                    if self._conf["audioformat"].value == "all":
                         return True
-                    if self._conf["audioformat"] == "highest":
+                    if self._conf["audioformat"].value == "highest":
                         #TODO work out how to detect this
                         pass
-                    elif self._conf["audioformat"] == "selected":
-                        if stream_format in self._conf['audioformats']:
+                    elif self._conf["audioformat"].value == "selected":
+                        if stream_format in self._conf['audioformats'].value:
                             return True
-            elif self._conf["audiolanguage"] == "selectedandoriginal":
+            elif self._conf["audiolanguage"].value == "selectedandoriginal":
                 original_bool = stream_language == self._disc_language
-                selected_bool = stream_language in self._conf['audiolanguages']
+                selected_bool = stream_language in self._conf['audiolanguages'].value
                 if original_bool or selected_bool:
-                    if self._conf["audioformat"] == "all":
+                    if self._conf["audioformat"].value == "all":
                         return True
-                    if self._conf["audioformat"] == "highest":
+                    if self._conf["audioformat"].value == "highest":
                         #TODO work out how to detect this
                         pass
-                    elif self._conf["audioformat"] == "selected":
-                        if stream_format in self._conf['audioformats']:
+                    elif self._conf["audioformat"].value == "selected":
+                        if stream_format in self._conf['audioformats'].value:
                             return True
-            elif self._conf["audiolanguage"] == "selected":
-                if stream_language in self._conf['audiolanguages']:
-                    if self._conf["audioformat"] == "all":
+            elif self._conf["audiolanguage"].value == "selected":
+                if stream_language in self._conf['audiolanguages'].value:
+                    if self._conf["audioformat"].value == "all":
                         return True
-                    if self._conf["audioformat"] == "highest":
+                    if self._conf["audioformat"].value == "highest":
                         #TODO work out how to detect this
                         pass
-                    elif self._conf["audioformat"] == "selected":
-                        if stream_format in self._conf['audioformats']:
+                    elif self._conf["audioformat"].value == "selected":
+                        if stream_format in self._conf['audioformats'].value:
                             return True
         elif stream.stream_type() == "subtitle":
             if stream.duplicate():
                 return False
             if stream.hearing_impaired() is True:
-                if self._conf['keepclosedcaptions']:
-                    if self._conf["subtitle"] == "all":
+                if self._conf['keepclosedcaptions'].value:
+                    if self._conf["subtitle"].value == "all":
                         return True
-                    if self._conf["subtitle"] == "selected":
-                        if stream_language in self._conf['subtitlelanguages']:
+                    if self._conf["subtitle"].value == "selected":
+                        if stream_language in self._conf['subtitlelanguages'].value:
                             return True
             elif stream.comment() is True:
-                if self._conf['keepcommentary']:
-                    if self._conf["subtitle"] == "all":
+                if self._conf['keepcommentary'].value:
+                    if self._conf["subtitle"].value == "all":
                         return True
-                    if self._conf["subtitle"] == "selected":
-                        if stream_language in self._conf['subtitlelanguages']:
+                    if self._conf["subtitle"].value == "selected":
+                        if stream_language in self._conf['subtitlelanguages'].value:
                             return True
             else:
-                if self._conf["subtitle"] == "all":
+                if self._conf["subtitle"].value == "all":
                     return True
-                if self._conf["subtitle"] == "selected":
-                    if stream_language in self._conf['subtitlelanguages']:
+                if self._conf["subtitle"].value == "selected":
+                    if stream_language in self._conf['subtitlelanguages'].value:
                         return True
         return False
 

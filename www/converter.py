@@ -1,6 +1,7 @@
 '''Converter pages'''
 import json
 import cherrypy
+from libs.authenticator import AUTHENTICATION
 from libs.html_template import HTMLTEMPLATE
 from libs import html_parts as ghtml_parts
 from . import html_parts
@@ -10,7 +11,7 @@ class Converter(HTMLTEMPLATE):
 
     def _return(self):
         '''return on fail'''
-        raise cherrypy.HTTPRedirect(self._tackem_system.baseurl + "ripping/ripper/")
+        raise cherrypy.HTTPRedirect(self._baseurl + "ripping/ripper/")
 
     @cherrypy.expose
     def index(self):
@@ -20,7 +21,7 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single converter item'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if index is None:
             self._return()
         try:
@@ -35,13 +36,13 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def getids(self):
         '''index of Drives'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         return json.dumps(self._tackem_system.system().get_converter().get_data_ids())
 
     @cherrypy.expose
     def getconverting(self, index=None):
         '''get single converter item'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if index is None:
             self._return()
         try:
@@ -53,7 +54,7 @@ class Converter(HTMLTEMPLATE):
     @cherrypy.expose
     def progress(self, index=None):
         '''get progress bar item'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if index is None:
             self._return()
         try:

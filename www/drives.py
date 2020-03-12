@@ -1,5 +1,6 @@
 '''drives pages'''
 import cherrypy
+from libs.authenticator import AUTHENTICATION
 from libs.html_template import HTMLTEMPLATE
 
 class Drives(HTMLTEMPLATE):
@@ -7,7 +8,7 @@ class Drives(HTMLTEMPLATE):
 
     def _return(self):
         '''return on fail'''
-        raise cherrypy.HTTPRedirect(self._tackem_system.baseurl + "ripping/ripper/")
+        raise cherrypy.HTTPRedirect(self._baseurl + "ripping/ripper/")
 
     @cherrypy.expose
     def index(self):
@@ -17,7 +18,7 @@ class Drives(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single Drive'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if index is None:
             self._return()
         try:

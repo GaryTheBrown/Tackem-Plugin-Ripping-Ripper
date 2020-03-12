@@ -2,7 +2,8 @@
 import os
 import cherrypy
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
-from system.web import TackemSystemWeb
+from system.plugin import TackemSystemPlugin
+from config_data import CONFIG
 from .root import Root
 from .drives import Drives
 from .video_labeler import VideoLabeler
@@ -13,7 +14,7 @@ def mounts(key, instance_name=None): # take tackem_system off the line and gener
     #it through to the html template that should take it as as argument so some windows have full
     #others have limited access to system data
     '''where the system creates the cherrypy mounts'''
-    tackem_system = TackemSystemWeb("ripping", "ripper", instance_name)
+    tackem_system = TackemSystemPlugin("ripping", "ripper", instance_name)
     stylesheet = key.replace(" ", "/") + "/static/style.css"
     root = Root("Ripper", key, tackem_system, base_stylesheet=stylesheet)
     root.drives = Drives("Ripper Drives", key, tackem_system, base_stylesheet=stylesheet)
@@ -21,19 +22,23 @@ def mounts(key, instance_name=None): # take tackem_system off the line and gener
                                      base_stylesheet=stylesheet)
     root.converter = Converter("Ripper Video Converter", key, tackem_system,
                                base_stylesheet=stylesheet)
-    cherrypy.tree.mount(root,
-                        tackem_system.baseurl + key.replace(" ", "/") + "/",
-                        cherrypy_cfg(tackem_system.config)
+    cherrypy.tree.mount(
+        root,
+        CONFIG['webui']['baseurl'].value + key.replace(" ", "/") + "/",
+        cherrypy_cfg()
     )
 
-def cherrypy_cfg(config):
+def cherrypy_cfg():
     '''generate the cherrypy conf'''
-    temp_video_location = config['locations']['videoripping']
-    if config['locations']['videoripping'][0] != "/":
-        temp_video_location = PROGRAMCONFIGLOCATION + config['locations']['videoripping']
-    temp_audio_location = config['locations']['audioripping']
-    if config['locations']['audioripping'][0] != "/":
-        temp_audio_location = PROGRAMCONFIGLOCATION + config['locations']['audioripping']
+    config = CONFIG['plugins']['ripping']['ripper']
+    temp_video_location = config['locations']['videoripping'].value
+    if config['locations']['videoripping'].value[0] != "/":
+        temp_video_location = PROGRAMCONFIGLOCATION
+        temp_video_location += config['locations']['videoripping'].value
+    temp_audio_location = config['locations']['audioripping'].value
+    if config['locations']['audioripping'].value[0] != "/":
+        temp_audio_location = PROGRAMCONFIGLOCATION
+        temp_audio_location += config['locations']['audioripping'].value
 
     conf_root = {
         '/static': {

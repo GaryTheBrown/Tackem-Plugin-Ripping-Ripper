@@ -3,6 +3,8 @@ import datetime
 import json
 from glob import glob
 import cherrypy
+from config_data import CONFIG
+from libs.authenticator import AUTHENTICATION
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
 from libs.html_template import HTMLTEMPLATE
 from libs import html_parts as ghtml_parts
@@ -26,7 +28,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def single(self, index=None):
         '''get single labeler item'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if index is None:
             self._return()
         try:
@@ -43,14 +45,14 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def getids(self):
         '''index of discs to label'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         db_label = "WWW" + cherrypy.request.remote.ip
         return json.dumps(self._tackem_system.system().get_video_labeler().get_ids(db_label))
 
     @cherrypy.expose
     def edit(self, index=None):
         '''edit the data page'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if index is None:
             self._return()
         try:
@@ -70,7 +72,7 @@ class VideoLabeler(HTMLTEMPLATE):
         if data['rip_data'] is None:
             rip_data = None
             disc_type_html = self._edit_disc_type_work(data, 'change')
-            visibility = 'style="display:none;"'
+            visibility = 'hidden'
         else:
             rip_data = json.loads(data['rip_data'])
             disc_info = disc_type.make_disc_type(rip_data)
@@ -84,9 +86,10 @@ class VideoLabeler(HTMLTEMPLATE):
         tracks = None
         if disc_info:
             tracks = disc_info.tracks()
-        file_location = self._config['locations']['videoripping']
+        config = CONFIG['plugins']['ripping']['ripper']
+        file_location = config['locations']['videoripping'].value
         if file_location[0] != "/":
-            file_location = PROGRAMCONFIGLOCATION + self._config['locations']['videoripping']
+            file_location = PROGRAMCONFIGLOCATION + config['locations']['videoripping'].value
         file_dir = file_location + str(data['id']) + "/"
         track_files = glob(file_dir + "*.mkv")
         track_files.sort()
@@ -103,7 +106,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def editdisctype(self, index=None, disc_type_code=None):
         '''gets the disc type html'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if index is None:
             self._return()
         try:
@@ -161,7 +164,8 @@ class VideoLabeler(HTMLTEMPLATE):
 
     def _tracktype_section(self, disc_index, track_index, track_file, track_data=None):
         '''labeler disc type templated section'''
-        probe_info = FFprobe(self._config['converter']['ffprobelocation'], track_file)
+        config = CONFIG['plugins']['ripping']['ripper']
+        probe_info = FFprobe(config['converter']['ffprobelocation'].value, track_file)
         stream_counts = probe_info.stream_type_count()
         format_info = probe_info.get_format_info()
         length = str(datetime.timedelta(seconds=int(format_info["duration"].split(".")[0])))
@@ -189,7 +193,7 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def edittracktype(self, disc_index=None, track_index=None, track_type_code=None):
         '''gets the disc type html'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         if disc_index is None or track_index is None:
             self._return()
         try:
@@ -215,11 +219,12 @@ class VideoLabeler(HTMLTEMPLATE):
             db_label = "WWW" + cherrypy.request.remote.ip
             video_labeler = self._tackem_system.system().get_video_labeler()
             video_labeler.clear_rip_track_data(db_label, disc_index_int, track_index_int)
-        location = self._config['locations']['videoripping']
+        config = CONFIG['plugins']['ripping']['ripper']
+        location = config['locations']['videoripping'].value
         if location[0] != "/":
-            location = PROGRAMCONFIGLOCATION + self._config['locations']['videoripping']
+            location = PROGRAMCONFIGLOCATION + config['locations']['videoripping'].value
         track_file = location + "/" + str(disc_index) + "/" + str(track_index).zfill(2) + ".mkv"
-        probe_info = FFprobe(self._config['converter']['ffprobelocation'], track_file)
+        probe_info = FFprobe(config['converter']['ffprobelocation'].value, track_file)
         track_type_html = self._edit_track_type_work(track_data, track_type_code, probe_info)
         return track_type_html.replace("%%TRACKINDEX%%", str(track_index))
 
@@ -237,15 +242,16 @@ class VideoLabeler(HTMLTEMPLATE):
     @cherrypy.expose
     def editsave(self, **kwargs):
         '''saves the disc type'''
-        self._tackem_system.auth.check_auth()
+        AUTHENTICATION.check_auth()
         for key in kwargs:
             if kwargs[key] == "True":
                 kwargs[key] = True
             if kwargs[key] == "False":
                 kwargs[key] = False
-        file_location = self._config['locations']['videoripping']
+        config = CONFIG['plugins']['ripping']['ripper']
+        file_location = config['locations']['videoripping'].value
         if file_location[0] != "/":
-            file_location = PROGRAMCONFIGLOCATION + self._config['locations']['videoripping']
+            file_location = PROGRAMCONFIGLOCATION + config['locations']['videoripping'].value
         file_dir = file_location + str(kwargs['discid']) + "/"
         data = {}
         data['tracks'] = [None] * len(glob(file_dir + "*.mkv"))
@@ -262,7 +268,8 @@ class VideoLabeler(HTMLTEMPLATE):
                     data['tracks'][track_index]["_".join(array[2:])] = kwargs[item]
                 else:
                     if "streams" not in data['tracks'][track_index]:
-                        probe_info = FFprobe(self._config['converter']['ffprobelocation'],
+                        config = CONFIG['plugins']['ripping']['ripper']
+                        probe_info = FFprobe(config['converter']['ffprobelocation'].value,
                                              file_dir + array[1].zfill(2) + ".mkv")
                         data['tracks'][track_index]["streams"] = [None] * probe_info.stream_count()
                     if not data['tracks'][track_index]["streams"][int(array[3])]:

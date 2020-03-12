@@ -2,6 +2,7 @@
 import os
 import pexpect
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
+from config_data import CONFIG
 from .audiocd import AudioCD
 
 #FORMATS - WAV OGG FLAC MP3 http://opus-codec.org/ http://www.wavpack.com/
@@ -14,11 +15,11 @@ class AudioCDLinux(AudioCD):
 #####################
     def _rip_disc(self):
         '''command to rip the cd here'''
-        temp_location = self._tackem_system.config()['locations']['audioripping']
-        if temp_location[0] != "/":
-            temp_location = PROGRAMCONFIGLOCATION
-            temp_location += self._tackem_system.config()['locations']['audioripping']
-        temp_dir = temp_location + str(self._db_id)
+        temp_loc = CONFIG['plugins']['ripping']['ripper']['locations']['audioripping'].value
+        if temp_loc[0] != "/":
+            temp_loc = PROGRAMCONFIGLOCATION
+            temp_loc += CONFIG['plugins']['ripping']['ripper']['locations']['audioripping'].value
+        temp_dir = temp_loc + str(self._db_id)
         try:
             os.mkdir(temp_dir)
         except OSError:
@@ -44,7 +45,7 @@ class AudioCDLinux(AudioCD):
             if i == 0: # EOF
                 _ripping_track = None
                 break
-            elif i == 1:
+            if i == 1:
                 value = int(thread.match.group(0).rstrip().replace("%", ""))
                 if value == 0 and next_track:
                     self._ripping_track += 1

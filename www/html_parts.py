@@ -18,7 +18,7 @@ def drive(drive_obj, drive_index, name, vertical=False):
     data = drive_obj.html_data(False)
     locked_html = ""
     if not data["traylock"]:
-        locked_html = 'style="display:none"'
+        locked_html = 'hidden'
     name_html = ""
     if name != "":
         name_html += name + " ("
@@ -34,7 +34,7 @@ def drive(drive_obj, drive_index, name, vertical=False):
         drive_html = drive_html.replace("%%RIPPINGDATAVISIBLE%%", "")
         drive_html = drive_html.replace("%%RIPPINGDATA%%", data["rippingdata"])
     else:
-        drive_html = drive_html.replace("%%RIPPINGDATAVISIBLE%%", 'style="display:none;"')
+        drive_html = drive_html.replace("%%RIPPINGDATAVISIBLE%%", 'hidden')
         drive_html = drive_html.replace("%%RIPPINGDATA%%", "")
     return drive_html
 

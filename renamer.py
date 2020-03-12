@@ -3,6 +3,8 @@ import threading
 import json
 import os
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
+from libs.sql import Database
+from config_data import CONFIG
 from .ffprobe import FFprobe
 from .data.events import RipperEvents
 from .data.db_tables import VIDEO_INFO_DB_INFO as INFO_DB
@@ -10,20 +12,20 @@ from .data.disc_type import make_disc_type
 
 class Renamer():
     '''Master Section for the Renamer controller'''
-    def __init__(self, tackem_system):
-        self._tackem_system = tackem_system
+    def __init__(self):
         self._thread_name = "Renamer"
         self._thread = threading.Thread(target=self.run, args=())
         self._thread.setName(self._thread_name)
         self._thread_run = False
-        self._in_location = self._tackem_system.config()['locations']['videoripping']
+        config = CONFIG['plugins']['ripping']['ripper']['locations']
+        self._in_location = config['videoripping'].value
         if self._in_location[0] != "/":
             self._in_location = PROGRAMCONFIGLOCATION
-            self._in_location += self._tackem_system.config()['locations']['videoripping']
-        self._out_location = self._tackem_system.config()['locations']['videoripping']
+            self._in_location += config['videoripping'].value
+        self._out_location = config['videoripping'].value
         if self._out_location[0] != "/":
             self._out_location = PROGRAMCONFIGLOCATION
-            self._out_location += self._tackem_system.config()['locations']['videoripped']
+            self._out_location += config['videoripped'].value
 ##########
 ##Thread##
 ##########
@@ -56,8 +58,11 @@ class Renamer():
     def _video_renamer(self):
         '''the renamer function for the video files'''
         check = {"ready_to_rename":True}
-        return_data = self._tackem_system.sql.select(self._thread_name,
-                                                           INFO_DB["name"], check)
+        return_data = Database.sql().select(
+            self._thread_name,
+            INFO_DB["name"],
+            check
+        )
         for item in return_data:
             rip_data = make_disc_type(json.loads(item['rip_data']))
             in_folder = self._in_location + item['id'] + "/"
@@ -67,8 +72,9 @@ class Renamer():
                 os.mkdir(out_folder)
             except OSError:
                 pass
+            config = CONFIG['plugins']['ripping']['ripper']
             for i, track in enumerate(rip_data.tracks()):
-                if track.video_type() not in self._tackem_system.config()['videoripping']['torip']:
+                if track.video_type() not in config['videoripping']['torip'].value:
                     continue
                 in_file = in_folder + str(i).zfill(2) + ".mkv"
                 out_file = ""
@@ -84,7 +90,7 @@ class Renamer():
                 elif track.video_type() == "other":
                     out_file += "other - " + rip_data.name() + " - " + track.other_type()
 
-                probe_video = FFprobe(self._tackem_system.config()['converter']['ffprobelocation'],
+                probe_video = FFprobe(config['converter']['ffprobelocation'].value,
                                       in_file).get_video_info()[0]
                 if probe_video["height"] > 576:
                     out_file += "." + str(probe_video["height"]) + "p"
@@ -97,7 +103,11 @@ class Renamer():
                 final_out_file = out_folder + out_file
                 os.rename(in_file, final_out_file)
 
-            self._tackem_system.sql.update(self._thread_name, INFO_DB["name"], item['id'],
-                                                 {"ready_for_library":True})
+            Database.sql().update(
+                self._thread_name,
+                INFO_DB["name"],
+                item['id'],
+                {"ready_for_library":True}
+            )
             if not self._thread_run:
                 return
