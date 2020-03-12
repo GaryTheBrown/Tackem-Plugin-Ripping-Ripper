@@ -1,10 +1,6 @@
 '''Ripper Linux init'''
-import sys
 import platform
 import pathlib
-import threading
-from configobj import ConfigObj
-from validate import Validator
 from libs.startup_arguments import PROGRAMCONFIGLOCATION, PLUGINFOLDERLOCATION
 from libs.plugin_base import PluginBaseClass, load_plugin_settings
 from libs.config.list import ConfigList
