@@ -7,6 +7,7 @@ from .data.events import RipperEvents
 from .data.db_tables import VIDEO_INFO_DB_INFO as INFO_DB
 from .data.disc_type import DiscType
 
+
 class VideoLabeler():
     '''Master Section for the Drive controller'''
 
@@ -17,7 +18,8 @@ class VideoLabeler():
 
     def get_count(self, thread_name):
         '''returns the data as dict for html'''
-        dict_of_values = {"ripped":True, "ready_to_convert":False, "ready_to_rename":False}
+        dict_of_values = {"ripped": True,
+                          "ready_to_convert": False, "ready_to_rename": False}
         return Database.sql().count_where(
             thread_name,
             INFO_DB["name"],
@@ -26,7 +28,8 @@ class VideoLabeler():
 
     def get_ids(self, thread_name):
         '''returns the data as dict for html'''
-        dict_of_values = {"ripped":True, "ready_to_convert":False, "ready_to_rename":False}
+        dict_of_values = {"ripped": True,
+                          "ready_to_convert": False, "ready_to_rename": False}
         return_values = ["id"]
         return_data = Database.sql().select(
             thread_name,
@@ -38,7 +41,8 @@ class VideoLabeler():
 
     def get_data(self, thread_name):
         '''returns the data as dict for html'''
-        dict_of_values = {"ripped":True, "ready_to_convert":False, "ready_to_rename":False}
+        dict_of_values = {"ripped": True,
+                          "ready_to_convert": False, "ready_to_rename": False}
         return_values = ["id", "uuid", "label", "disc_type", "rip_data"]
         return Database.sql().select(
             thread_name,
@@ -49,7 +53,8 @@ class VideoLabeler():
 
     def get_data_by_id(self, thread_name, db_id):
         '''returns the data by id as dict for html'''
-        data = Database.sql().select_by_row(thread_name, INFO_DB["name"], db_id)
+        data = Database.sql().select_by_row(
+            thread_name, INFO_DB["name"], db_id)
         if data is False:
             return False
         if data["ripped"] is False:
@@ -68,7 +73,7 @@ class VideoLabeler():
             rip_data = json.dumps(data)
         else:
             return
-        dict_for_db = {"rip_data":rip_data}
+        dict_for_db = {"rip_data": rip_data}
         config = CONFIG['plugins']['ripping']['ripper']
         if finished:
             if config['converter']['enabled'].value:
@@ -92,7 +97,8 @@ class VideoLabeler():
 
     def clear_rip_data(self, thread_name, db_id):
         '''Clears the rip data from the database'''
-        Database.sql().update(thread_name, INFO_DB["name"], db_id, {"rip_data":None})
+        Database.sql().update(
+            thread_name, INFO_DB["name"], db_id, {"rip_data": None})
 
     def clear_rip_track_data(self, thread_name, db_id, track_id):
         '''Clears the rip data from the database'''
@@ -112,5 +118,5 @@ class VideoLabeler():
                         thread_name,
                         INFO_DB["name"],
                         db_id,
-                        {"rip_data":to_save}
+                        {"rip_data": to_save}
                     )

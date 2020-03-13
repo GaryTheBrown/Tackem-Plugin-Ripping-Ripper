@@ -5,16 +5,18 @@ from libs import html_parts as ghtml_parts
 from . import stream_type
 from ..www import html_parts
 
-TYPES = {"dontrip":"ban",
-         "movie":"film",
-         "tvshow":"tv",
-         "trailer":"film",
-         "extra":"plus",
-         "other":"plus"
-        }
+TYPES = {"dontrip": "ban",
+         "movie": "film",
+         "tvshow": "tv",
+         "trailer": "film",
+         "extra": "plus",
+         "other": "plus"
+         }
+
 
 class VideoTrackType(metaclass=ABCMeta):
     '''Master Type'''
+
     def __init__(self, video_type, streams, hdr):
         if video_type in TYPES:
             self._video_type = video_type
@@ -55,7 +57,8 @@ class VideoTrackType(metaclass=ABCMeta):
 
     def _change_section_html(self, track):
         '''change section code'''
-        html = "<div class=\"onclick topright\" onclick=\"tracktype(" + str(track)
+        html = "<div class=\"onclick topright\" onclick=\"tracktype(" + str(
+            track)
         html += ", 'change');\">(change)</div>"
         return html
 
@@ -67,7 +70,8 @@ class VideoTrackType(metaclass=ABCMeta):
             if self._streams:
                 html += self._streams[stream_index].get_edit_panel(stream_data)
             else:
-                temp_stream = stream_type.make_blank_stream_type(stream_index, stream_type_code)
+                temp_stream = stream_type.make_blank_stream_type(
+                    stream_index, stream_type_code)
                 html += temp_stream.get_edit_panel(stream_data)
         return html_parts.video_panel("Streams", "", html)
 
@@ -86,8 +90,10 @@ class VideoTrackType(metaclass=ABCMeta):
                                  True)
         return html
 
+
 class DONTRIPTrackType(VideoTrackType):
     '''Other Types'''
+
     def __init__(self, reason):
         super().__init__("dontrip", None, False)
         self._reason = reason
@@ -107,7 +113,8 @@ class DONTRIPTrackType(VideoTrackType):
         '''returns the edit panel'''
         section_html = self._title_html("Don't Rip")
         section_html += " " + self._change_section_html("%%TRACKINDEX%%")
-        section_html += ghtml_parts.hidden("track_%%TRACKINDEX%%_video_type", "dontrip", True)
+        section_html += ghtml_parts.hidden(
+            "track_%%TRACKINDEX%%_video_type", "dontrip", True)
         section_html += ghtml_parts.item("track_%%TRACKINDEX%%_reason", "Reason",
                                          "Enter the reason not to rip here",
                                          ghtml_parts.input_box("text",
@@ -116,9 +123,12 @@ class DONTRIPTrackType(VideoTrackType):
                                          True)
         return section_html
 
+
 class MovieTrackType(VideoTrackType):
     '''Movie Type'''
-    def __init__(self, streams=None, hdr=False): # tvshow_link=None, tvshow_special_number=None,
+
+    # tvshow_link=None, tvshow_special_number=None,
+    def __init__(self, streams=None, hdr=False):
         super().__init__("movie", streams, hdr)
     #     self._tvshow_link = tvshow_link
     #     self._tvshow_special_number = tvshow_special_number
@@ -141,14 +151,17 @@ class MovieTrackType(VideoTrackType):
         '''returns the edit panel'''
         section_html = self._title_html("Movie")
         section_html += " " + self._change_section_html("%%TRACKINDEX%%")
-        section_html += ghtml_parts.hidden("track_%%TRACKINDEX%%_video_type", "movie", True)
+        section_html += ghtml_parts.hidden(
+            "track_%%TRACKINDEX%%_video_type", "movie", True)
         section_html += super()._get_edit_panel_bottom()
         if ffprobe:
             section_html += self._make_stream_sections(ffprobe)
         return section_html
 
+
 class TVShowTrackType(VideoTrackType):
     '''TV Show Type'''
+
     def __init__(self, season, episode, streams=None, hdr=False):
         super().__init__("tvshow", streams, hdr)
         self._season = season
@@ -174,7 +187,8 @@ class TVShowTrackType(VideoTrackType):
         '''returns the edit panel'''
         section_html = self._title_html("TV Show Episode")
         section_html += " " + self._change_section_html("%%TRACKINDEX%%")
-        section_html += ghtml_parts.hidden("track_%%TRACKINDEX%%_video_type", "tvshow", True)
+        section_html += ghtml_parts.hidden(
+            "track_%%TRACKINDEX%%_video_type", "tvshow", True)
         section_html += ghtml_parts.item("track_%%TRACKINDEX%%_season", "Season Number",
                                          "Enter the Season Number here",
                                          ghtml_parts.input_box("number",
@@ -192,8 +206,10 @@ class TVShowTrackType(VideoTrackType):
             section_html += self._make_stream_sections(ffprobe)
         return section_html
 
+
 class ExtraTrackType(VideoTrackType):
     '''Extra Type'''
+
     def __init__(self, name, streams=None, hdr=False):
         super().__init__("extra", streams, hdr)
         self._name = name
@@ -221,7 +237,8 @@ class ExtraTrackType(VideoTrackType):
         '''returns the edit panel'''
         section_html = self._title_html("Extra")
         section_html += " " + self._change_section_html("%%TRACKINDEX%%")
-        section_html += ghtml_parts.hidden("track_%%TRACKINDEX%%_video_type", "extra", True)
+        section_html += ghtml_parts.hidden(
+            "track_%%TRACKINDEX%%_video_type", "extra", True)
         section_html += ghtml_parts.item("track_%%TRACKINDEX%%_name", "Name",
                                          "Enter the extra name",
                                          ghtml_parts.input_box("text",
@@ -233,8 +250,10 @@ class ExtraTrackType(VideoTrackType):
             section_html += self._make_stream_sections(ffprobe)
         return section_html
 
+
 class TrailerTrackType(VideoTrackType):
     '''trailer Type'''
+
     def __init__(self, info, streams=None, hdr=False):
         super().__init__("trailer", streams, hdr)
         self._info = info
@@ -254,7 +273,8 @@ class TrailerTrackType(VideoTrackType):
         '''returns the edit panel'''
         section_html = self._title_html("Trailer")
         section_html += " " + self._change_section_html("%%TRACKINDEX%%")
-        section_html += ghtml_parts.hidden("track_%%TRACKINDEX%%_video_type", "trailer", True)
+        section_html += ghtml_parts.hidden(
+            "track_%%TRACKINDEX%%_video_type", "trailer", True)
         section_html += ghtml_parts.item("track_%%TRACKINDEX%%_info", "Information",
                                          "Enter trailer information here",
                                          ghtml_parts.input_box("text",
@@ -266,8 +286,10 @@ class TrailerTrackType(VideoTrackType):
             section_html += self._make_stream_sections(ffprobe)
         return section_html
 
+
 class OtherTrackType(VideoTrackType):
     '''Other Types'''
+
     def __init__(self, other_type, streams=None, hdr=False):
         super().__init__("other", streams, hdr)
         self._other_type = other_type
@@ -287,7 +309,8 @@ class OtherTrackType(VideoTrackType):
         '''returns the edit panel'''
         section_html = self._title_html("Other")
         section_html += " " + self._change_section_html("%%TRACKINDEX%%")
-        section_html += ghtml_parts.hidden("track_%%TRACKINDEX%%_video_type", "other", True)
+        section_html += ghtml_parts.hidden(
+            "track_%%TRACKINDEX%%_video_type", "other", True)
         section_html += ghtml_parts.item("track_%%TRACKINDEX%%_othertype", "Other Type",
                                          "What is it?",
                                          ghtml_parts.input_box("text",
@@ -298,6 +321,7 @@ class OtherTrackType(VideoTrackType):
         if ffprobe:
             section_html += self._make_stream_sections(ffprobe)
         return section_html
+
 
 def make_track_type(track):
     '''transforms the track returned from the DB or API to the classes above'''
@@ -327,6 +351,7 @@ def make_track_type(track):
         return OtherTrackType(track.get('other_type', ""), streams=streams,
                               hdr=track.get('hdr', False))
     return None
+
 
 def make_blank_track_type(track_type_code):
     '''make the blank track type'''

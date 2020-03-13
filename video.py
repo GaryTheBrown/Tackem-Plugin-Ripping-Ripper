@@ -12,8 +12,10 @@ from .data.db_tables import VIDEO_INFO_DB_INFO as INFO_DB
 from .data.disc_type import make_disc_type
 from .data.events import RipperEvents
 
+
 class Video(RipperSubSystem, metaclass=ABCMeta):
     '''video ripping controller'''
+
     def __init__(self, device, thread_name, disc_type, set_drive_status, thread_run):
         super().__init__(device, thread_name, set_drive_status, thread_run)
         self._disc_info_lock = threading.Lock()
@@ -41,7 +43,8 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
         label = self._disc_info_label
         sha256 = self._disc_info_sha256
         disc_type = self._disc_type
-        basic_info = {"uuid":uuid, "label":label, "sha256": sha256, "disc_type": disc_type}
+        basic_info = {"uuid": uuid, "label": label,
+                      "sha256": sha256, "disc_type": disc_type}
         self._db_id = Database.sql().table_has_row(
             self._thread_name,
             INFO_DB["name"],
@@ -59,18 +62,19 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
                 INFO_DB["name"],
                 self._db_id,
                 {
-                    "ripped":False,
-                    "ready_to_convert":False,
-                    "ready_to_rename":False,
-                    "ready_for_library":False,
-                    "completed":False
+                    "ripped": False,
+                    "ready_to_convert": False,
+                    "ready_to_rename": False,
+                    "ready_for_library": False,
+                    "completed": False
                 }
             )
             if rip_data_json is not None:
                 self._disc_rip_info = make_disc_type(json.loads(rip_data_json))
                 return
         else:
-            Database.sql().insert(self._thread_name, INFO_DB["name"], basic_info)
+            Database.sql().insert(self._thread_name,
+                                  INFO_DB["name"], basic_info)
             self._db_id = Database.sql().table_has_row(
                 self._thread_name,
                 INFO_DB["name"],
@@ -83,7 +87,7 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
                 self._thread_name,
                 INFO_DB["name"],
                 self._db_id,
-                {"rip_data":rip_list}
+                {"rip_data": rip_list}
             )
 
 #################
@@ -110,7 +114,7 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
             self._thread_name,
             INFO_DB["name"],
             self._db_id,
-            {"ripped":True}
+            {"ripped": True}
         )
         return True
 
@@ -135,7 +139,7 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
                 self._thread_name,
                 INFO_DB["name"],
                 self._db_id,
-                {"ready_to_convert":True}
+                {"ready_to_convert": True}
             )
             RipperEvents().converter.set()
         else:
@@ -143,12 +147,13 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
                 self._thread_name,
                 INFO_DB["name"],
                 self._db_id,
-                {"ready_to_rename":True}
+                {"ready_to_rename": True}
             )
             RipperEvents().renamer.set()
 ##########
 ##Script##
 ##########
+
     def run(self):
         '''script to rip video disc'''
         self._set_drive_status("Get disc unique data")

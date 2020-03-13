@@ -5,9 +5,11 @@ from libs.data.languages import Languages
 from libs import html_parts as ghtml_parts
 from ..www import html_parts
 
+
 class StreamType(metaclass=ABCMeta):
     '''Master Type'''
     _types = ["video", "audio", "subtitle"]
+
     def __init__(self, stream_type, stream_index, label):
         if stream_type in self._types:
             self._stream_type = stream_type
@@ -42,8 +44,10 @@ class StreamType(metaclass=ABCMeta):
     def get_edit_panel(self, section_info=""):
         '''returns the edit panel'''
 
+
 class VideoStreamType(StreamType):
     '''Other Types'''
+
     def __init__(self, stream_index, label=""):
         super().__init__("video", stream_index, label)
 
@@ -62,17 +66,18 @@ class VideoStreamType(StreamType):
             temp = section_info.get("r_frame_rate", "1/1").split("/")
             frame_rate = str(float(int(temp[0]) / int(temp[1])))
             ffprobeinfo = {
-                "Codec Name":section_info.get("codec_long_name", ""),
-                "Codec Profile":section_info.get("profile", ""),
-                "Resolution":resolution,
-                "Aspect Ratio":section_info.get("display_aspect_ratio", ""),
-                "Frame Rate":frame_rate,
-                "Pixel Format":section_info.get("pix_fmt", ""),
-                "Colour Space":section_info.get("color_space", ""),
-                "Colour Transfer":section_info.get("color_transfer", ""),
-                "Colour Primaries":section_info.get("color_primaries", "")
+                "Codec Name": section_info.get("codec_long_name", ""),
+                "Codec Profile": section_info.get("profile", ""),
+                "Resolution": resolution,
+                "Aspect Ratio": section_info.get("display_aspect_ratio", ""),
+                "Frame Rate": frame_rate,
+                "Pixel Format": section_info.get("pix_fmt", ""),
+                "Colour Space": section_info.get("color_space", ""),
+                "Colour Transfer": section_info.get("color_transfer", ""),
+                "Colour Primaries": section_info.get("color_primaries", "")
             }
-        html = ghtml_parts.hidden(self._var_start() + "stream_type", "video", True)
+        html = ghtml_parts.hidden(
+            self._var_start() + "stream_type", "video", True)
         html += ghtml_parts.item(self._var_start() + "label", "Label",
                                  "Label of the Subtitles",
                                  ghtml_parts.input_box("text", self._var_start() + "label",
@@ -82,8 +87,10 @@ class VideoStreamType(StreamType):
         return html_parts.video_panel(str(self._stream_index) + ". Video Section", "",
                                       stream_panel_html)
 
+
 class AudioStreamType(StreamType):
     '''Other Types'''
+
     def __init__(self, stream_index, dub=False, original=False, comment=False,
                  visual_impaired=False, karaoke=False, label="", duplicate=False):
         super().__init__("audio", stream_index, label)
@@ -137,21 +144,22 @@ class AudioStreamType(StreamType):
             language_3t = section_info.get("tags", {}).get("language", "")
             language = Languages().get_name_from_3t(language_3t)
             ffprobeinfo = {
-                "Codec Name":section_info.get("codec_long_name", ""),
-                "Sample Rate":"{:,}".format(int(section_info.get("sample_rate", 0)) / 1000) + "kHz",
-                "Channels":section_info.get("channels", ""),
-                "Channel Layout":section_info.get("channel_layout", ""),
-                "Bit Rate":"{:,}".format(int(section_info.get("bit_rate", 0)) / 1000) + "kbit/s",
-                "Language":language,
-                "Default":bool(section_info.get("disposition", {}).get("default", "")),
-                "Dubbed":bool(section_info.get("disposition", {}).get("dub", "")),
-                "Original":bool(section_info.get("disposition", {}).get("original", "")),
-                "Commentary":bool(section_info.get("disposition", {}).get("comment", "")),
-                "Karaoke":bool(section_info.get("disposition", {}).get("karaoke", "")),
-                "Visual Impaired":bool(section_info.get("disposition", {}).get("visual_impaired",
-                                                                               ""))
+                "Codec Name": section_info.get("codec_long_name", ""),
+                "Sample Rate": "{:,}".format(int(section_info.get("sample_rate", 0)) / 1000) + "kHz",
+                "Channels": section_info.get("channels", ""),
+                "Channel Layout": section_info.get("channel_layout", ""),
+                "Bit Rate": "{:,}".format(int(section_info.get("bit_rate", 0)) / 1000) + "kbit/s",
+                "Language": language,
+                "Default": bool(section_info.get("disposition", {}).get("default", "")),
+                "Dubbed": bool(section_info.get("disposition", {}).get("dub", "")),
+                "Original": bool(section_info.get("disposition", {}).get("original", "")),
+                "Commentary": bool(section_info.get("disposition", {}).get("comment", "")),
+                "Karaoke": bool(section_info.get("disposition", {}).get("karaoke", "")),
+                "Visual Impaired": bool(section_info.get("disposition", {}).get("visual_impaired",
+                                                                                ""))
             }
-        html = ghtml_parts.hidden(self._var_start() + "stream_type", "audio", True)
+        html = ghtml_parts.hidden(
+            self._var_start() + "stream_type", "audio", True)
         html += html_parts.video_item(self._var_start() + "dub", "Dubbed Audio",
                                       "Is this a Dubbed Audio Track",
                                       ghtml_parts.checkbox_single("",
@@ -199,8 +207,10 @@ class AudioStreamType(StreamType):
         return html_parts.video_panel(str(self._stream_index) + ". Audio Section", "",
                                       stream_panel_html)
 
+
 class SubtitleStreamType(StreamType):
     '''Other Types'''
+
     def __init__(self, stream_index, forced=False, hearing_impaired=False,
                  lyrics=False, label="", duplicate=False, comment=False):
         super().__init__("subtitle", stream_index, label)
@@ -248,16 +258,17 @@ class SubtitleStreamType(StreamType):
             language_3t = section_info.get("tags", {}).get("language", "")
             language = Languages().get_name_from_3t(language_3t)
             ffprobeinfo = {
-                "Language":language,
-                "Default":bool(section_info.get("disposition", {}).get("default", "")),
-                "Forced":bool(section_info.get("disposition", {}).get("forced", "")),
-                "Hearing Impaired":bool(section_info.get("disposition", {}).get("hearing_impaired",
-                                                                                "")),
-                "Commentary":bool(section_info.get("disposition", {}).get("comment", "")),
-                "Lyrics":bool(section_info.get("disposition", {}).get("lyrics", ""))
+                "Language": language,
+                "Default": bool(section_info.get("disposition", {}).get("default", "")),
+                "Forced": bool(section_info.get("disposition", {}).get("forced", "")),
+                "Hearing Impaired": bool(section_info.get("disposition", {}).get("hearing_impaired",
+                                                                                 "")),
+                "Commentary": bool(section_info.get("disposition", {}).get("comment", "")),
+                "Lyrics": bool(section_info.get("disposition", {}).get("lyrics", ""))
             }
 
-        html = ghtml_parts.hidden(self._var_start() + "stream_type", "subtitle", True)
+        html = ghtml_parts.hidden(
+            self._var_start() + "stream_type", "subtitle", True)
         html += html_parts.video_item(self._var_start() + "forced", "Forced Subtitle",
                                       "Is this a Forced Subtitle Track",
                                       ghtml_parts.checkbox_single("",
@@ -299,6 +310,7 @@ class SubtitleStreamType(StreamType):
         return html_parts.video_panel(str(self._stream_index) + ". Subtitle Section", "",
                                       stream_panel_html)
 
+
 def make_stream_type(stream_index, stream):
     '''transforms the stream returned from the DB or API to the classes above'''
     if isinstance(stream, str):
@@ -317,19 +329,22 @@ def make_stream_type(stream_index, stream):
                                dub=stream.get('dub', False),
                                original=stream.get('original', False),
                                comment=stream.get('comment', False),
-                               visual_impaired=stream.get('visual_impaired', False),
+                               visual_impaired=stream.get(
+                                   'visual_impaired', False),
                                karaoke=stream.get('karaoke', False),
                                label=stream.get('label', ""),
                                duplicate=stream.get('duplicate', ""))
     elif stream['stream_type'] == "subtitle":
         return SubtitleStreamType(stream_index,
                                   forced=stream.get('forced', False),
-                                  hearing_impaired=stream.get('hearing_impaired', False),
+                                  hearing_impaired=stream.get(
+                                      'hearing_impaired', False),
                                   lyrics=stream.get('lyrics', False),
                                   label=stream.get('label', ""),
                                   duplicate=stream.get('duplicate', False),
                                   comment=stream.get('comment', False))
     return None
+
 
 def make_blank_stream_type(stream_index, stream_type_code):
     '''make the blank stream type'''

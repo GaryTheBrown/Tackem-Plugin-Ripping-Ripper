@@ -6,6 +6,7 @@ from libs.html_template import HTMLTEMPLATE
 from libs import html_parts as ghtml_parts
 from . import html_parts
 
+
 class Converter(HTMLTEMPLATE):
     '''CONVERTER WEBUI'''
 

@@ -9,8 +9,10 @@ from .data.video_track_type import make_track_type
 from .converter_video_thread import ConverterVideoThread
 from .data.events import RipperEvents
 
+
 class Converter():
     '''Master Section for the Converter controller'''
+
     def __init__(self):
         self._thread_name = "Converter"
         self._thread = threading.Thread(target=self.run, args=())
@@ -109,7 +111,7 @@ class Converter():
 
     def _get_video_tasks(self):
         '''Grab video tasks and append them to the list'''
-        check = {"converted":False}
+        check = {"converted": False}
         return_data = Database.sql().select(
             self._thread_name,
             VIDEO_CONVERT_DB["name"],
@@ -123,10 +125,12 @@ class Converter():
                 data.append(return_data)
             for item in data:
                 if "v" + item['id'] not in self._list_of_running_ids:
-                    item['disc_info'] = make_disc_type(json.loads(item['disc_info']))
-                    item['track_info'] = make_track_type(json.loads(item['track_info']))
+                    item['disc_info'] = make_disc_type(
+                        json.loads(item['disc_info']))
+                    item['track_info'] = make_track_type(
+                        json.loads(item['track_info']))
 
-                    #TEMP HDR SKIPPER
+                    # TEMP HDR SKIPPER
                     if item['track_info'].hdr():
                         continue
 
@@ -140,7 +144,7 @@ class Converter():
             self._thread_name,
             INFO_DB["name"],
             {
-                "ready_to_convert":True,
+                "ready_to_convert": True,
                 "ready_to_rename": False
             },
             "id"
@@ -155,13 +159,13 @@ class Converter():
                 Database.sql().delete_where(
                     self._thread_name,
                     VIDEO_CONVERT_DB["name"],
-                    {"disc_id":disc}
+                    {"disc_id": disc}
                 )
                 Database.sql().update(
                     self._thread_name,
                     INFO_DB["name"],
                     disc,
-                    {"ready_to_rename":True}
+                    {"ready_to_rename": True}
                 )
                 wake_renamer = True
         return wake_renamer
@@ -183,6 +187,7 @@ class Converter():
                     return False
         return True
 
+
 def create_video_converter_row(thread_name, info_id, disc_rip_info, to_rip):
     '''Function to add Video tracks to Convertor DB'''
     folder_name = str(info_id) + "/"
@@ -191,12 +196,14 @@ def create_video_converter_row(thread_name, info_id, disc_rip_info, to_rip):
         if track.video_type() in to_rip:
             file_name = folder_name + str(i).zfill(2) + ".mkv"
             to_save = {
-                "info_id":info_id,
-                "filename":file_name,
-                "disc_info":disc_info,
-                "track_info":json.dumps(track.make_dict())
+                "info_id": info_id,
+                "filename": file_name,
+                "disc_info": disc_info,
+                "track_info": json.dumps(track.make_dict())
             }
-            Database.sql().insert(thread_name, VIDEO_CONVERT_DB["name"], to_save)
+            Database.sql().insert(
+                thread_name, VIDEO_CONVERT_DB["name"], to_save)
+
 
 def create_audiocd_converter_row(thread_name, info_id, disc_rip_info):
     '''Function to add Audio CD tracks to Convertor DB'''

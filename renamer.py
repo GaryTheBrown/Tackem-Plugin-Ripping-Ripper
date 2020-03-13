@@ -10,8 +10,10 @@ from .data.events import RipperEvents
 from .data.db_tables import VIDEO_INFO_DB_INFO as INFO_DB
 from .data.disc_type import make_disc_type
 
+
 class Renamer():
     '''Master Section for the Renamer controller'''
+
     def __init__(self):
         self._thread_name = "Renamer"
         self._thread = threading.Thread(target=self.run, args=())
@@ -57,7 +59,7 @@ class Renamer():
 
     def _video_renamer(self):
         '''the renamer function for the video files'''
-        check = {"ready_to_rename":True}
+        check = {"ready_to_rename": True}
         return_data = Database.sql().select(
             self._thread_name,
             INFO_DB["name"],
@@ -107,7 +109,7 @@ class Renamer():
                 self._thread_name,
                 INFO_DB["name"],
                 item['id'],
-                {"ready_for_library":True}
+                {"ready_for_library": True}
             )
             if not self._thread_run:
                 return

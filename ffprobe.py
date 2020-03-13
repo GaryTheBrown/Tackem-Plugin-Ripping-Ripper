@@ -2,8 +2,10 @@
 import json
 from subprocess import DEVNULL, PIPE, Popen
 
+
 class FFprobe:
     '''ffprobe system'''
+
     def __init__(self, ffprob_location, infile):
         prog_args = [ffprob_location,
                      "-v",
@@ -14,7 +16,7 @@ class FFprobe:
                      "-show_chapters",
                      "-show_format",
                      infile
-                    ]
+                     ]
         process = Popen(prog_args, stdout=PIPE, stderr=DEVNULL)
         self._info = json.loads(process.communicate()[0].decode('utf-8'))
         process.wait()

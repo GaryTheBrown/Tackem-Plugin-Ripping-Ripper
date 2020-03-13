@@ -10,14 +10,17 @@ from .video_labeler import VideoLabeler
 from .converter import Converter
 
 LAYOUT = {}
-def mounts(key, instance_name=None): # take tackem_system off the line and generate it inside pass
-    #it through to the html template that should take it as as argument so some windows have full
-    #others have limited access to system data
+
+
+def mounts(key, instance_name=None):  # take tackem_system off the line and generate it inside pass
+    # it through to the html template that should take it as as argument so some windows have full
+    # others have limited access to system data
     '''where the system creates the cherrypy mounts'''
     tackem_system = TackemSystemPlugin("ripping", "ripper", instance_name)
     stylesheet = key.replace(" ", "/") + "/static/style.css"
     root = Root("Ripper", key, tackem_system, base_stylesheet=stylesheet)
-    root.drives = Drives("Ripper Drives", key, tackem_system, base_stylesheet=stylesheet)
+    root.drives = Drives("Ripper Drives", key,
+                         tackem_system, base_stylesheet=stylesheet)
     root.videolabeler = VideoLabeler("Ripper Video Labeler", key, tackem_system,
                                      base_stylesheet=stylesheet)
     root.converter = Converter("Ripper Video Converter", key, tackem_system,
@@ -27,6 +30,7 @@ def mounts(key, instance_name=None): # take tackem_system off the line and gener
         CONFIG['webui']['baseurl'].value + key.replace(" ", "/") + "/",
         cherrypy_cfg()
     )
+
 
 def cherrypy_cfg():
     '''generate the cherrypy conf'''

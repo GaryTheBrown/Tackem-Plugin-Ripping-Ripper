@@ -3,6 +3,7 @@ import cherrypy
 from libs.authenticator import AUTHENTICATION
 from libs.html_template import HTMLTEMPLATE
 
+
 class Drives(HTMLTEMPLATE):
     '''DRIVES WEBUI'''
 

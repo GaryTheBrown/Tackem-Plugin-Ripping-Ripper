@@ -9,14 +9,16 @@ from .data.db_tables import AUDIO_INFO_DB_INFO as INFO_DB
 
 # from .data.events import RipperEvents
 
-#FORMATS - WAV OGG FLAC MP3 http://opus-codec.org/ http://www.wavpack.com/
+# FORMATS - WAV OGG FLAC MP3 http://opus-codec.org/ http://www.wavpack.com/
 
-#tagging data to be split between cd and track info for saving to the database for use later on
+# tagging data to be split between cd and track info for saving to the database for use later on
 # when converting tag the files if possible at the same time otherwise convert then tag in the
 # converter
 
+
 class AudioCD(RipperSubSystem, metaclass=ABCMeta):
     '''Audio ripping controller'''
+
     def __init__(self, device, thread_name, set_drive_status, thread_run):
         super().__init__(device, thread_name, set_drive_status, thread_run)
         self._disc_id = None
@@ -44,14 +46,15 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
 #######################
     def _check_db_and_api_for_disc_info(self):
         '''checks the DB and API for the Disc info'''
-        basic_info = {"musicbrainz_disc_id":self._disc_id, "track_count":self._track_count}
+        basic_info = {"musicbrainz_disc_id": self._disc_id,
+                      "track_count": self._track_count}
         self._db_id = Database.sql().table_has_row(
             self._thread_name,
             INFO_DB["name"],
             basic_info
         )
         if self._db_id:
-            #data in local DB
+            # data in local DB
             return_data = Database.sql().select_by_row(
                 self._thread_name,
                 INFO_DB["name"],
@@ -64,18 +67,19 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
                 INFO_DB["name"],
                 self._db_id,
                 {
-                    "ripped":False,
-                    "ready_to_convert":False,
-                    "ready_to_rename":False,
-                    "ready_for_library":False,
-                    "completed":False
+                    "ripped": False,
+                    "ready_to_convert": False,
+                    "ready_to_rename": False,
+                    "ready_for_library": False,
+                    "completed": False
                 }
             )
             if disc_info_json is not None:
                 self._disc_info = json.loads(disc_info_json)
                 return
         else:
-            Database.sql().insert(self._thread_name, INFO_DB["name"], basic_info)
+            Database.sql().insert(self._thread_name,
+                                  INFO_DB["name"], basic_info)
             self._db_id = Database.sql().table_has_row(
                 self._thread_name,
                 INFO_DB["name"],
@@ -129,6 +133,7 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
 ##########
 ##Script##
 ##########
+
     def run(self):
         '''script to rip audio cd'''
         self._set_drive_status("Get disc unique data")
@@ -146,7 +151,7 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
             self._thread_name,
             INFO_DB["name"],
             self._db_id,
-            {"ripped":True}
+            {"ripped": True}
         )
         if self._release_id:
             self._send_to_next_system()

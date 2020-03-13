@@ -7,6 +7,7 @@ from .drive import Drive
 from .audiocd_linux import AudioCDLinux
 from .video_linux import VideoLinux
 
+
 class DriveLinux(Drive):
     '''Drive Control ripper program self contained'''
 
@@ -19,19 +20,19 @@ class DriveLinux(Drive):
             file_device = os.open(self._device, os.O_RDONLY | os.O_NONBLOCK)
             return_value = fcntl.ioctl(file_device, 0x5326)
             os.close(file_device)
-            if return_value == 1: #no disk in tray
+            if return_value == 1:  # no disk in tray
                 self._set_tray_status("empty")
                 self._set_disc_type("none")
                 self._set_drive_status("idle")
-            elif return_value == 2: #tray open
+            elif return_value == 2:  # tray open
                 self._set_tray_status("open")
                 self._set_disc_type("none")
                 self._set_drive_status("idle")
-            elif return_value == 3: #reading tray
+            elif return_value == 3:  # reading tray
                 self._set_tray_status("reading")
                 self._set_disc_type("none")
                 self._set_drive_status("loading disc")
-            elif return_value == 4: #disk in tray
+            elif return_value == 4:  # disk in tray
                 self._set_tray_status("loaded")
             else:
                 self._set_tray_status("unknown")
@@ -50,8 +51,10 @@ class DriveLinux(Drive):
             while message == "":
                 process1 = Popen(["udevadm", "info", "--query=all", "--name=" + self._device],
                                  stdout=PIPE, stderr=DEVNULL)
-                process2 = Popen(["grep", "ID_FS_TYPE="], stdin=process1.stdout, stdout=PIPE)
-                message = process2.communicate()[0].decode('utf-8').replace("\n", "")
+                process2 = Popen(["grep", "ID_FS_TYPE="],
+                                 stdin=process1.stdout, stdout=PIPE)
+                message = process2.communicate()[0].decode(
+                    'utf-8').replace("\n", "")
                 if not self._thread_run:
                     self.unlock_tray()
                     return False
@@ -60,9 +63,11 @@ class DriveLinux(Drive):
             if file_format == "udf":
                 process3 = Popen(["udevadm", "info", "--query=all", "--name=" + self._device],
                                  stdout=PIPE, stderr=DEVNULL)
-                process4 = Popen(["grep", "ID_FS_VERSION="], stdin=process3.stdout, stdout=PIPE)
+                process4 = Popen(["grep", "ID_FS_VERSION="],
+                                 stdin=process3.stdout, stdout=PIPE)
                 message = process4.communicate()[0]
-                udf_version_str = message.decode('utf-8').rstrip().split("=")[1]
+                udf_version_str = message.decode(
+                    'utf-8').rstrip().split("=")[1]
                 udf_version_float = float(udf_version_str)
                 if udf_version_float == 1.02:
                     self._set_disc_type("dvd")
@@ -96,24 +101,28 @@ class DriveLinux(Drive):
     def open_tray(self):
         '''Send Command to open the tray'''
         with self._drive_lock:
-            Popen(["eject", self._device], stdout=DEVNULL, stderr=DEVNULL).wait()
+            Popen(["eject", self._device],
+                  stdout=DEVNULL, stderr=DEVNULL).wait()
 
     def close_tray(self):
         '''Send Command to close the tray'''
         with self._drive_lock:
-            Popen(["eject", "-t", self._device], stdout=DEVNULL, stderr=DEVNULL).wait()
+            Popen(["eject", "-t", self._device],
+                  stdout=DEVNULL, stderr=DEVNULL).wait()
 
     def lock_tray(self):
         '''Send Command to lock the tray'''
         with self._drive_lock:
             self._tray_locked = True
-            Popen(["eject", "-i1", self._device], stdout=DEVNULL, stderr=DEVNULL).wait()
+            Popen(["eject", "-i1", self._device],
+                  stdout=DEVNULL, stderr=DEVNULL).wait()
 
     def unlock_tray(self):
         '''Send Command to unlock the tray'''
         with self._drive_lock:
             self._tray_locked = False
-            Popen(["eject", "-i0", self._device], stdout=DEVNULL, stderr=DEVNULL).wait()
+            Popen(["eject", "-i0", self._device],
+                  stdout=DEVNULL, stderr=DEVNULL).wait()
 
 ##########
 ##Script##
@@ -131,6 +140,8 @@ class DriveLinux(Drive):
 ###############
 #EXTERNAL APPS#
 ###############
+
+
 def get_hwinfo_linux():
     '''issues the hwinfo command and passes the info back in a dict'''
     process = Popen(["hwinfo", "--cdrom"], stdout=PIPE, stderr=DEVNULL)
@@ -152,11 +163,14 @@ def get_hwinfo_linux():
         temp_list['label'] = hwinfo_item["device_files"].split(",")[0]
         temp_list['link'] = hwinfo_item["device_files"].split(",")[0]
         temp_list['model'] = hwinfo_item["model"].replace('"', "")
-        temp_list['features'] = hwinfo_item["features"].replace(" ", "").split(",")
+        temp_list['features'] = hwinfo_item["features"].replace(
+            " ", "").split(",")
         udevadm_process = Popen(["udevadm", "info", "--query=all", "--name=" + temp_list['link']],
                                 stdout=PIPE, stderr=DEVNULL)
-        grep_process = Popen(["grep", "ID_SERIAL="], stdin=udevadm_process.stdout, stdout=PIPE)
+        grep_process = Popen(["grep", "ID_SERIAL="],
+                             stdin=udevadm_process.stdout, stdout=PIPE)
         message = grep_process.communicate()[0]
-        uid = message.decode('utf-8').rstrip().split("=")[1].replace("-0:0", "").replace("_", "-")
+        uid = message.decode(
+            'utf-8').rstrip().split("=")[1].replace("-0:0", "").replace("_", "-")
         drives[uid] = temp_list
     return drives

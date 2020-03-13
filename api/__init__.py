@@ -2,6 +2,7 @@
 import cherrypy
 from api.system_base import APISystemBase
 
+
 @cherrypy.expose
 class API(APISystemBase):
     '''PLUGIN API ROOT'''

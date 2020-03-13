@@ -7,8 +7,10 @@ from libs import html_parts as ghtml_parts
 from config_data import CONFIG
 from .www import html_parts
 
+
 class Drive(metaclass=ABCMeta):
     '''Master Section for the Drive controller'''
+
     def __init__(self, cfg_name, device_info):
         self._cfg_name = cfg_name
         self._device_info = device_info
@@ -204,7 +206,8 @@ class Drive(metaclass=ABCMeta):
     def html_data(self, return_json=True):
         '''returns the data as json or dict for html'''
         return_dict = {}
-        image_folder = CONFIG["webui"]["baseurl"].value + "ripping/ripper/static/images/"
+        image_folder = CONFIG["webui"]["baseurl"].value + \
+            "ripping/ripper/static/images/"
         tray_status = self.get_tray_status()
         if tray_status == "empty":
             return_dict["traystatus"] = image_folder + "empty.png"
@@ -230,7 +233,8 @@ class Drive(metaclass=ABCMeta):
                 return_dict["ripping"] = True
                 file_percent = "Track " + str(ripping_data['track']) + " ("
                 file_percent += str(ripping_data['file_percent']) + "%)"
-                total_percent = "Total (" + str(ripping_data['total_percent']) + "%)"
+                total_percent = "Total (" + \
+                    str(ripping_data['total_percent']) + "%)"
                 progress_bar_track = ghtml_parts.progress_bar(file_percent,
                                                               ripping_data['file'],
                                                               ripping_data['max'],

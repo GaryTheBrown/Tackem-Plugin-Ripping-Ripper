@@ -5,9 +5,11 @@ from libs import html_parts
 from ..data import disc_type, video_track_type
 DIR = os.path.dirname(__file__) + "/html/"
 
+
 def get_page(page):
     '''opens an page and returns it with the navbar sorted'''
     return str(open(DIR + page + ".html", "r").read())
+
 
 def drive(drive_obj, drive_index, name, vertical=False):
     '''return html for Drive'''
@@ -38,13 +40,16 @@ def drive(drive_obj, drive_index, name, vertical=False):
         drive_html = drive_html.replace("%%RIPPINGDATA%%", "")
     return drive_html
 
+
 def drives(drive_list, config_drives, vertical=False):
     '''returns the group of drives html'''
     drives_html = ""
     for drive_index, drive_obj in enumerate(drive_list):
         cfg_name = drive_obj.get_cfg_name()
-        drives_html += drive(drive_obj, drive_index, config_drives[cfg_name]['name'], vertical)
+        drives_html += drive(drive_obj, drive_index,
+                             config_drives[cfg_name]['name'], vertical)
     return drives_html
+
 
 def drive_ripping_data(progress_bar_track, progress_bar_total):
     '''returns html for drive ripping data'''
@@ -53,14 +58,17 @@ def drive_ripping_data(progress_bar_track, progress_bar_total):
     html = html.replace("%%PROGRESSTOTAL%%", progress_bar_total)
     return html
 
+
 def video_labeler_item(data, baseurl, vertical=False):
     '''return html for labeler item'''
     if vertical:
-        item_html = str(open(DIR + 'video_labeler/itemvertical.html', "r").read())
+        item_html = str(
+            open(DIR + 'video_labeler/itemvertical.html', "r").read())
     else:
         item_html = str(open(DIR + 'video_labeler/item.html', "r").read())
 
-    disc_type_img = baseurl + "ripping/ripper/static/images/" + data['disc_type'] + "-video.png"
+    disc_type_img = baseurl + "ripping/ripper/static/images/" + \
+        data['disc_type'] + "-video.png"
     if data['rip_data'] is None:
         info = "NEW"
         label = data['label']
@@ -75,6 +83,7 @@ def video_labeler_item(data, baseurl, vertical=False):
     item_html = item_html.replace("%%BASEURL%%", baseurl)
     return item_html
 
+
 def video_labeler_items(data, baseurl, vertical=False):
     '''returns the group of labeler items html'''
     group_html = str(open(DIR + 'video_labeler/group.html', "r").read())
@@ -87,14 +96,17 @@ def video_labeler_items(data, baseurl, vertical=False):
         group_html = group_html.replace("%%LAYOUT%%", "")
     return group_html.replace("%%ITEMS%%", data_html)
 
+
 def video_labeler_disctype_start():
     '''labeler disc type starting section'''
     disc_type_html = get_page("video_labeler/edit/disctype/start")
     magic = 2
     item_html = ""
     for d_item in disc_type.TYPES:
-        item_html += video_labeler_disctype_start_item(d_item, disc_type.TYPES[d_item], magic)
+        item_html += video_labeler_disctype_start_item(
+            d_item, disc_type.TYPES[d_item], magic)
     return disc_type_html.replace("%%STARTLINKS%%", item_html)
+
 
 def video_labeler_disctype_start_item(d_item, icon, magic):
     '''labeler disc type starting section'''
@@ -102,16 +114,20 @@ def video_labeler_disctype_start_item(d_item, icon, magic):
     disc_type_html = disc_type_html.replace("%%STARTSIZE%%", str(magic))
     disc_type_html = disc_type_html.replace("%%STARTICON%%", icon)
     disc_type_html = disc_type_html.replace("%%STARTTYPE%%", d_item)
-    disc_type_html = disc_type_html.replace("%%STARTTYPESAFE%%", d_item.replace(" ", "").lower())
+    disc_type_html = disc_type_html.replace(
+        "%%STARTTYPESAFE%%", d_item.replace(" ", "").lower())
     return disc_type_html
+
 
 def video_labeler_disctype_template(label, disc_type_label, rip_data, search=True):
     '''labeler disc type templated section'''
     disc_type_html = get_page("video_labeler/edit/disctype/template")
     disc_type_html = disc_type_html.replace("%%DISCTYPE%%", disc_type_label)
     disc_type_html = disc_type_html.replace("%%DISCLABEL%%", label)
-    disc_type_html = disc_type_html.replace("%%PANEL%%", rip_data.get_edit_panel(search))
+    disc_type_html = disc_type_html.replace(
+        "%%PANEL%%", rip_data.get_edit_panel(search))
     return disc_type_html
+
 
 def video_labeler_tracktype_start():
     '''labeler track type starting section'''
@@ -123,6 +139,7 @@ def video_labeler_tracktype_start():
                                                         magic)
     return track_type_html.replace("%%STARTLINKS%%", item_html)
 
+
 def video_labeler_tracktype_start_item(d_item, icon, magic):
     '''labeler track type starting section'''
     track_type_html = get_page("video_labeler/edit/tracktype/startitem")
@@ -130,6 +147,7 @@ def video_labeler_tracktype_start_item(d_item, icon, magic):
     track_type_html = track_type_html.replace("%%STARTICON%%", icon)
     track_type_html = track_type_html.replace("%%STARTTYPE%%", d_item)
     return track_type_html
+
 
 def video_panel(panel_head, section_name, section_html):
     '''A Panel for track sections'''
@@ -142,13 +160,18 @@ def video_panel(panel_head, section_name, section_html):
         panel_html = panel_html.replace("%%SECTIONNAME%%", section_name)
     return panel_html.replace("%%SECTION%%", section_html)
 
+
 def video_labeler_tracktype_template(track_index, rip_data):
     '''labeler track type templated section'''
     track_type_html = get_page("video_labeler/edit/tracktype/template")
-    track_type_html = track_type_html.replace("%%TRACKTYPE%%", rip_data.video_type())
-    track_type_html = track_type_html.replace("%%PANEL%%", rip_data.get_edit_panel())
-    track_type_html = track_type_html.replace("%%TRACKINDEX%%", str(track_index))
+    track_type_html = track_type_html.replace(
+        "%%TRACKTYPE%%", rip_data.video_type())
+    track_type_html = track_type_html.replace(
+        "%%PANEL%%", rip_data.get_edit_panel())
+    track_type_html = track_type_html.replace(
+        "%%TRACKINDEX%%", str(track_index))
     return track_type_html
+
 
 def video_stream_panel(ffprobeinfo, options):
     '''panel for the stream info'''
@@ -156,6 +179,7 @@ def video_stream_panel(ffprobeinfo, options):
     html = html.replace("%%FFPROBEINFO%%", _ffprobe_info_panel(ffprobeinfo))
     html = html.replace("%%PANELOPTIONS%%", options)
     return html
+
 
 def _ffprobe_info_panel(data):
     '''generates the ffprobe info panel for the stream section'''
@@ -165,6 +189,7 @@ def _ffprobe_info_panel(data):
         html += '<div class="col-sm-8 col-6">' + str(data[key]) + '</div>'
     html += '</div>'
     return html
+
 
 def video_item(variable_name, label, help_text, input_html, not_in_config=False):
     ''' The whole section for each Config Object'''
@@ -180,6 +205,7 @@ def video_item(variable_name, label, help_text, input_html, not_in_config=False)
     if not_in_config:
         html = html.replace("cs_", "")
     return html
+
 
 def converter_item(data):
     '''return html for converter item'''
@@ -197,6 +223,7 @@ def converter_item(data):
     else:
         item_html = item_html.replace("%%PROGRESS%%", "")
     return item_html
+
 
 def converter_items(data):
     '''returns the group of converter items html'''

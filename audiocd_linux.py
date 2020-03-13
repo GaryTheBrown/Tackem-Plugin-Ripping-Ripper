@@ -5,7 +5,8 @@ from libs.startup_arguments import PROGRAMCONFIGLOCATION
 from config_data import CONFIG
 from .audiocd import AudioCD
 
-#FORMATS - WAV OGG FLAC MP3 http://opus-codec.org/ http://www.wavpack.com/
+# FORMATS - WAV OGG FLAC MP3 http://opus-codec.org/ http://www.wavpack.com/
+
 
 class AudioCDLinux(AudioCD):
     '''Audio CD ripping controller'''
@@ -33,7 +34,8 @@ class AudioCDLinux(AudioCD):
             self._device,
         ]
 
-        thread = pexpect.spawn(" ".join(prog_args), encoding='utf-8', cwd=temp_dir)
+        thread = pexpect.spawn(" ".join(prog_args),
+                               encoding='utf-8', cwd=temp_dir)
 
         cpl = thread.compile_pattern_list([
             pexpect.EOF,
@@ -42,7 +44,7 @@ class AudioCDLinux(AudioCD):
         self._ripping_track = 0
         while True:
             i = thread.expect_list(cpl, timeout=None)
-            if i == 0: # EOF
+            if i == 0:  # EOF
                 _ripping_track = None
                 break
             if i == 1:
@@ -52,6 +54,7 @@ class AudioCDLinux(AudioCD):
                     next_track = False
                 else:
                     next_track = True
-                total = round(((self._ripping_track - 1) * 100 + value) / self._track_count, 2)
+                total = round(((self._ripping_track - 1) *
+                               100 + value) / self._track_count, 2)
                 self._ripping_file_p = self._ripping_file = value
                 self._ripping_total_p = self._ripping_total = total

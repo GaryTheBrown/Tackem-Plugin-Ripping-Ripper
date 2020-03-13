@@ -5,18 +5,21 @@ from subprocess import DEVNULL, PIPE, Popen
 import pexpect
 from .video import Video
 
+
 class VideoLinux(Video):
     '''Video Control ripper program self contained'''
 ##########
 ##CHECKS##
 ##########
+
     def _check_disc_information(self):
         '''Will return if disc is in drive (setting the UUID and label) or it will return False'''
         process = Popen(["blkid", self._device], stdout=PIPE, stderr=DEVNULL)
         returned_message = process.communicate()[0]
         if not returned_message:
             return False
-        message = shlex.split(returned_message.decode('utf-8').rstrip().split(": ")[1])
+        message = shlex.split(returned_message.decode(
+            'utf-8').rstrip().split(": ")[1])
         uuid = message[0].split("=")[1]
         label = message[1].split("=")[1]
         if not self._thread_run:
@@ -29,12 +32,13 @@ class VideoLinux(Video):
             mplayer_process.wait()
         if not self._thread_run:
             return
-        #using DD to read the disc pass it to sha256 to make a unique code for searching by
+        # using DD to read the disc pass it to sha256 to make a unique code for searching by
         dd_process = Popen(["dd", "if=" + self._device, "bs=4M", "count=128", "status=none"],
                            stdout=PIPE, stderr=DEVNULL)
         sha256sum_process = Popen(["sha256sum"], stdin=dd_process.stdout, stdout=PIPE,
                                   stderr=DEVNULL)
-        sha256 = sha256sum_process.communicate()[0].decode('utf-8').replace("-", "").rstrip()
+        sha256 = sha256sum_process.communicate()[0].decode(
+            'utf-8').replace("-", "").rstrip()
         if dd_process.returncode > 0:
             return False
         if not self._thread_run:
@@ -82,11 +86,12 @@ class VideoLinux(Video):
         update_progress = False
         while True:
             i = thread.expect_list(cpl, timeout=None)
-            if i == 0: # EOF
+            if i == 0:  # EOF
                 self._ripping_track = None
                 break
             elif i == 1:
-                self._ripping_track = int(thread.match.group(0).split(":")[1].split(",")[1])
+                self._ripping_track = int(
+                    thread.match.group(0).split(":")[1].split(",")[1])
                 update_progress = True
             elif i == 2:
                 if update_progress:
@@ -94,8 +99,10 @@ class VideoLinux(Video):
                     self._ripping_file = int(values[0])
                     self._ripping_total = int(values[1])
                     self._ripping_max = int(values[2])
-                    self._ripping_file_p = round(float(int(values[0]) / int(values[2]) * 100), 2)
-                    self._ripping_total_p = round(float(int(values[1]) / int(values[2]) * 100), 2)
+                    self._ripping_file_p = round(
+                        float(int(values[0]) / int(values[2]) * 100), 2)
+                    self._ripping_total_p = round(
+                        float(int(values[1]) / int(values[2]) * 100), 2)
             elif i == 3:
                 update_progress = False
                 self._ripping_file = self._ripping_max

@@ -29,12 +29,14 @@ from .converter import Converter
 from .renamer import Renamer
 from .presets import video_presets_config_options
 
-SETTINGS = load_plugin_settings(PLUGINFOLDERLOCATION + "ripping/ripper/settings.json")
+SETTINGS = load_plugin_settings(
+    PLUGINFOLDERLOCATION + "ripping/ripper/settings.json")
 DRIVES = {}
 
 if platform.system() == 'Linux':
     if check_for_required_programs(SETTINGS['linux_programs'], output=False):
         DRIVES = get_hwinfo_linux()
+
 
 def check_enabled():
     '''plugin check for if plugin should be enabled'''
@@ -171,15 +173,18 @@ CONFIG = ConfigList(
                 ConfigObjOption("sbsl", "Side by Side (Left Eye First)"),
                 ConfigObjOption("sbsr", "Side by Side (Right Eye First)"),
                 ConfigObjOption("sbs2l", "Half Side by Side (Left Eye First)"),
-                ConfigObjOption("sbs2r", "Half Side by Side (Right Eye First)"),
+                ConfigObjOption(
+                    "sbs2r", "Half Side by Side (Right Eye First)"),
                 ConfigObjOption("abl", "Top Bottom (Left Eye Top)"),
                 ConfigObjOption("abr", "Top Bottom (Right Eye Top)"),
                 ConfigObjOption("ab2l", "Half Top Bottom (Left Eye Top)"),
                 ConfigObjOption("ab2r", "Half Top Bottom (Right Eye Top)"),
                 ConfigObjOption("al", "Alternating Frames (Left Eye First)"),
                 ConfigObjOption("ar", "Alternating Frames (Right Eye First)"),
-                ConfigObjOption("irl", "Interleaved Rows (Left Eye Has Top Row)"),
-                ConfigObjOption("irr", "Interleaved Rows (Right Eye Has Top Row)"),
+                ConfigObjOption(
+                    "irl", "Interleaved Rows (Left Eye Has Top Row)"),
+                ConfigObjOption(
+                    "irr", "Interleaved Rows (Right Eye Has Top Row)"),
                 ConfigObjOption("arbg", "Anaglyph Red/Blue Grayscale"),
                 ConfigObjOption("argg", "Anaglyph Red/Green Grayscale"),
                 ConfigObjOption("arcg", "Anaglyph Red/Cyan Grayscale"),
@@ -187,9 +192,11 @@ CONFIG = ConfigList(
                 ConfigObjOption("arcc", "Anaglyph Red/Cyan Colour"),
                 ConfigObjOption("arcd", "Anaglyph Red/Cyan Colour dubois"),
                 ConfigObjOption("agmg", "Anaglyph Green/Magenta Grayscale"),
-                ConfigObjOption("agmh", "Anaglyph Green/Magenta Half Coloured"),
+                ConfigObjOption(
+                    "agmh", "Anaglyph Green/Magenta Half Coloured"),
                 ConfigObjOption("agmc", "Anaglyph Green/Magenta Coloured"),
-                ConfigObjOption("agmd", "Anaglyph Green/Magenta Colour Dubois"),
+                ConfigObjOption(
+                    "agmd", "Anaglyph Green/Magenta Colour Dubois"),
                 ConfigObjOption("aybg", "Anaglyph Yellow/Blue Grayscale"),
                 ConfigObjOption("aybh", "Anaglyph Yellow/Blue Half Coloured"),
                 ConfigObjOption("aybc", "Anaglyph Yellow/Blue Coloured"),
@@ -199,7 +206,8 @@ CONFIG = ConfigList(
                 ConfigObjOption("chl", "Checkerboard (Left Eye First)"),
                 ConfigObjOption("chr", "Checkerboard (Right Eye First)"),
                 ConfigObjOption("icl", "Interleaved Columns (Left Eye First)"),
-                ConfigObjOption("icr", "Interleaved Columns (Right Eye First)"),
+                ConfigObjOption(
+                    "icr", "Interleaved Columns (Right Eye First)"),
                 ConfigObjOption("hdmi", "HDMI Frame Pack")
             ],
             'keep',
@@ -603,11 +611,11 @@ class Plugin(PluginBaseClass):
                     if ROOT_CONFIG['plugins']['ripping']['ripper']['drives'][dri]["enabled"].value:
                         self._drives.append(DriveLinux(dri, DRIVES[dri]))
 
-        #Check if Devices Exist and if not it will stop the plugin from loading
+        # Check if Devices Exist and if not it will stop the plugin from loading
         if not self._drives:
             return False, "No Optical Devices Found or enabled"
 
-        #Start the threads
+        # Start the threads
         for drive in self._drives:
             drive.start_thread()
 

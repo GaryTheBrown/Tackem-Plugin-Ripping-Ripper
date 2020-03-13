@@ -12,8 +12,10 @@ from .data.db_tables import VIDEO_CONVERT_DB_INFO as VIDEO_CONVERT_DB
 from .ffprobe import FFprobe
 from .presets import get_video_preset_command
 
+
 class ConverterVideoThread():
     '''Master Section for the Video Converter controller'''
+
     def __init__(self, item, tasks_sema):
         self._id = item['id']
         self._filename = item['filename']
@@ -28,7 +30,7 @@ class ConverterVideoThread():
         self._sql_row_id = Database.sql().table_has_row(
             self._thread_name,
             VIDEO_CONVERT_DB["name"],
-            {"id":self._id}
+            {"id": self._id}
         )
         loc = CONFIG['plugins']['ripping']['ripper']['locations']['videoripping'].value
         if loc[0] != "/":
@@ -38,7 +40,8 @@ class ConverterVideoThread():
         self._outfile = self._infile.replace(".mkv", "") + ".NEW.mkv"
         self._disc_language = Languages().convert_2_to_3t(self._disc_info.language())
         self._conf = CONFIG['plugins']['ripping']['ripper']['converter']
-        self._probe_info = FFprobe(self._conf['ffprobelocation'].value, self._infile)
+        self._probe_info = FFprobe(
+            self._conf['ffprobelocation'].value, self._infile)
         self._command = []
         self._frame_count = None
         self._frame_process = 0
@@ -65,9 +68,9 @@ class ConverterVideoThread():
             'discid': int(file_name_split[0]),
             'trackid': int(file_name_split[1]),
             'converting': self._running,
-            'count':self._frame_count,
-            'process':self._frame_process,
-            'percent':self._percent
+            'count': self._frame_count,
+            'process': self._frame_process,
+            'percent': self._percent
         }
         return return_dict
 
@@ -112,7 +115,7 @@ class ConverterVideoThread():
                 self._thread_name,
                 VIDEO_CONVERT_DB["name"],
                 self._sql_row_id,
-                {"converted":True}
+                {"converted": True}
             )
         self._task_done = True
         self._tasks_sema.release()
@@ -121,7 +124,7 @@ class ConverterVideoThread():
         '''creates the conversion command here'''
         if not os.path.exists(self._infile):
             print("ERROR:" + self._infile + " missing")
-            return False# PROBLEM HERE AS IN FILE MISSING
+            return False  # PROBLEM HERE AS IN FILE MISSING
         if os.path.exists(self._outfile):
             os.remove(self._outfile)
 
@@ -129,7 +132,7 @@ class ConverterVideoThread():
         self._command.append("-i")
         self._command.append('"' + self._infile + '"')
 
-        #Deal with tagging here
+        # Deal with tagging here
         if self._conf['videoinserttags'].value:
             scraper = Scraper()
             disc_type = self._disc_info.disc_type()
@@ -137,7 +140,8 @@ class ConverterVideoThread():
             tags = []
             scraper_data = None
             if disc_type == "Movie":
-                scraper_info = scraper.get_movie_details(self._disc_info.moviedbid())
+                scraper_info = scraper.get_movie_details(
+                    self._disc_info.moviedbid())
                 if scraper_info['success']:
                     scraper_data = scraper_info['response']
                 if track_type == "movie":
@@ -170,14 +174,15 @@ class ConverterVideoThread():
                 elif track_type == "trailer":
                     tags.append('title="' + self._track_info.info() + '"')
                 elif track_type == "other":
-                    tags.append('title="' + self._track_info.other_type() + '"')
+                    tags.append(
+                        'title="' + self._track_info.other_type() + '"')
             tags.append('language="' + self._disc_info.language() + '"')
 
             for tag in tags:
                 self._command.append('-metadata')
                 self._command.append(tag)
 
-        #Deal with chapters here
+        # Deal with chapters here
         if self._probe_info.has_chapters():
             self._command.append("-map_chapters")
             if self._conf['keepchapters'].value:
@@ -185,7 +190,7 @@ class ConverterVideoThread():
             else:
                 self._command.append("-1")
 
-        #Deal with mapping streams here
+        # Deal with mapping streams here
         streams = self._track_info.streams()
         map_links = [None] * len(streams)
         new_count = 0
@@ -195,75 +200,85 @@ class ConverterVideoThread():
                 map_links[index] = new_count
                 new_count += 1
 
-        #Add metadata and dispositions for each track here
+        # Add metadata and dispositions for each track here
         video_count = 0
         audio_count = 0
         subtitle_count = 0
         for index, stream in enumerate(streams):
             if map_links[index] is not None:
                 deposition = self._make_deposition(stream,
-                                                   self._probe_info.get_stream(index)["disposition"]
-                                                  )
+                                                   self._probe_info.get_stream(
+                                                       index)["disposition"]
+                                                   )
                 if stream.stream_type() == "video":
                     if stream.label() != "":
-                        self._command.append("-metadata:s:v:" + str(video_count))
-                        self._command.append('title="[' + stream.label() + ']"')
+                        self._command.append(
+                            "-metadata:s:v:" + str(video_count))
+                        self._command.append(
+                            'title="[' + stream.label() + ']"')
                         # self._command.append('handler="[' + stream.label() + ']"')
                     self._command.append("-disposition:v:" + str(video_count))
                     self._command.append(str(deposition))
                     video_count += 1
                 elif stream.stream_type() == "audio":
                     if stream.label() != "":
-                        self._command.append("-metadata:s:a:" + str(audio_count))
-                        self._command.append('title="[' + stream.label() + ']"')
+                        self._command.append(
+                            "-metadata:s:a:" + str(audio_count))
+                        self._command.append(
+                            'title="[' + stream.label() + ']"')
                         # self._command.append('handler="[' + stream.label() + ']"')
                     self._command.append("-disposition:a:" + str(audio_count))
                     self._command.append(str(deposition))
                     audio_count += 1
                 elif stream.stream_type() == "subtitle":
                     if stream.label() != "":
-                        self._command.append("-metadata:s:s:" + str(subtitle_count))
-                        self._command.append('title="[' + stream.label() + ']"')
+                        self._command.append(
+                            "-metadata:s:s:" + str(subtitle_count))
+                        self._command.append(
+                            'title="[' + stream.label() + ']"')
                         # self._command.append('handler="[' + stream.label() + ']"')
-                    self._command.append("-disposition:s:" + str(subtitle_count))
+                    self._command.append(
+                        "-disposition:s:" + str(subtitle_count))
                     self._command.append(str(deposition))
                     subtitle_count += 1
 
-        #Deal with video resolution here
+        # Deal with video resolution here
         config_video_max_height = self._conf["videoresolution"].value
         video_info = self._probe_info.get_video_info()
         video_height = video_info[0]['height']
 
-        #Detection of 3d here
+        # Detection of 3d here
         if "stereo_mode" in video_info[0].get("tags", {}):
             if self._conf['video3dtype'].value != 'keep':
-                aspect_ratio = video_info[0]['display_aspect_ratio'] # 4:3 or 16:9
+                # 4:3 or 16:9
+                aspect_ratio = video_info[0]['display_aspect_ratio']
                 type_3d_in = None
-                type_3d = video_info[0].get("tags", {}).get("stereo_mode", "mono")
+                type_3d = video_info[0].get(
+                    "tags", {}).get("stereo_mode", "mono")
                 if type_3d == 'left_right':
                     # Both views are arranged side by side, Left-eye view is on the left
                     if aspect_ratio == '4:3' or aspect_ratio == '16:9':
-                        type_3d_in = 'sbs2l' # side by side parallel with half width resolution
+                        type_3d_in = 'sbs2l'  # side by side parallel with half width resolution
                     else:
-                        type_3d_in = 'sbsl' # side by side parallel
+                        type_3d_in = 'sbsl'  # side by side parallel
                 elif type_3d == 'right_left':
                     # Both views are arranged side by side, Right-eye view is on the left
                     if aspect_ratio == '4:3' or aspect_ratio == '16:9':
-                        type_3d_in = 'sbs2r' # side by side crosseye with half width resolution
+                        type_3d_in = 'sbs2r'  # side by side crosseye with half width resolution
                     else:
-                        type_3d_in = 'sbsr' # side by side crosseye
+                        type_3d_in = 'sbsr'  # side by side crosseye
                 elif type_3d == 'bottom_top':
                     #  Both views are arranged in top-bottom orientation, Left-eye view is at bottom
                     if aspect_ratio == '4:3' or aspect_ratio == '16:9':
-                        type_3d_in = 'ab2r' # above-below with half height resolution
+                        type_3d_in = 'ab2r'  # above-below with half height resolution
                     else:
-                        type_3d_in = 'abr' # above-below
+                        type_3d_in = 'abr'  # above-below
                 elif type_3d == 'top_bottom':
                     # Both views are arranged in top-bottom orientation, Left-eye view is on top
                     if aspect_ratio == '4:3' or aspect_ratio == '16:9':
-                        type_3d_in = 'ab2l' # above-below with half height resolution
+                        type_3d_in = 'ab2l'  # above-below with half height resolution
                     else:
-                        type_3d_in = 'abl' # above-below
+                        type_3d_in = 'abl'  # above-below
                 elif type_3d == 'row_interleaved_rl':
                     # Each view is constituted by a row based interleaving, Right-eye view is first
                     type_3d_in = 'irr'
@@ -286,18 +301,21 @@ class ConverterVideoThread():
                     type_3d_in = 'ar'
                 if type_3d_in is not None:
                     type_3d_out = self._conf['video3dtype'].value
-                    self._command.append("-vf stereo3d=" + type_3d_in + ":" + type_3d_out)
+                    self._command.append(
+                        "-vf stereo3d=" + type_3d_in + ":" + type_3d_out)
                     if type_3d_out == "ml" or type_3d_out == "mr":
-                        self._command.append('-metadata:s:v:0 stereo_mode="mono"')
+                        self._command.append(
+                            '-metadata:s:v:0 stereo_mode="mono"')
         if config_video_max_height != "keep":
-            if config_video_max_height == "sd": #576 or 480
-                if video_height > 576: # PAL spec resolution
+            if config_video_max_height == "sd":  # 576 or 480
+                if video_height > 576:  # PAL spec resolution
                     self._command.append("-vf scale=-2:480")
-            else: # HD videos Here
+            else:  # HD videos Here
                 if video_height > config_video_max_height:
-                    self._command.append("-vf scale=-2:" + config_video_max_height)
+                    self._command.append(
+                        "-vf scale=-2:" + config_video_max_height)
 
-        #Deal with video codec here
+        # Deal with video codec here
         if self._conf['videocodec'].value == "keep":
             self._command.append('-c:v copy')
         elif self._conf['videocodec'].value == "x264default":
@@ -327,19 +345,19 @@ class ConverterVideoThread():
             if self._conf['x26extra'].value:
                 self._command.append(str(self._conf['x26extra'].value))
         elif self._conf['videocodec'].value == "preset":
-            video_command = get_video_preset_command(self._conf['videopreset'].value)
+            video_command = get_video_preset_command(
+                self._conf['videopreset'].value)
             self._command.append(video_command)
 
-        #tell ffmpeg to copy the audio
+        # tell ffmpeg to copy the audio
         self._command.append('-c:a copy')
 
-        #tell ffmpeg to copy the subtitles
+        # tell ffmpeg to copy the subtitles
         self._command.append('-c:s copy')
 
-        #tell ffmpag the output file
+        # tell ffmpag the output file
         self._command.append('"' + self._outfile + '"')
         return True
-
 
     def _map_stream(self, index, stream):
         '''system to return if to map the stream'''
@@ -355,7 +373,7 @@ class ConverterVideoThread():
                 if self._conf["audioformat"].value == "all":
                     return True
                 if self._conf["audioformat"].value == "highest":
-                    #TODO work out how to detect this
+                    # TODO work out how to detect this
                     pass
                 elif self._conf["audioformat"].value == "selected":
                     if stream_format in self._conf['audioformats'].value:
@@ -365,7 +383,7 @@ class ConverterVideoThread():
                     if self._conf["audioformat"].value == "all":
                         return True
                     if self._conf["audioformat"].value == "highest":
-                        #TODO work out how to detect this
+                        # TODO work out how to detect this
                         pass
                     elif self._conf["audioformat"].value == "selected":
                         if stream_format in self._conf['audioformats'].value:
@@ -377,7 +395,7 @@ class ConverterVideoThread():
                     if self._conf["audioformat"].value == "all":
                         return True
                     if self._conf["audioformat"].value == "highest":
-                        #TODO work out how to detect this
+                        # TODO work out how to detect this
                         pass
                     elif self._conf["audioformat"].value == "selected":
                         if stream_format in self._conf['audioformats'].value:
@@ -387,7 +405,7 @@ class ConverterVideoThread():
                     if self._conf["audioformat"].value == "all":
                         return True
                     if self._conf["audioformat"].value == "highest":
-                        #TODO work out how to detect this
+                        # TODO work out how to detect this
                         pass
                     elif self._conf["audioformat"].value == "selected":
                         if stream_format in self._conf['audioformats'].value:
@@ -486,7 +504,7 @@ class ConverterVideoThread():
         cpl = thread.compile_pattern_list([pexpect.EOF, "frame= *\d+"])
         while True:
             i = thread.expect_list(cpl, timeout=None)
-            if i == 0: # EOF
+            if i == 0:  # EOF
                 break
             elif i == 1:
                 frames = thread.match.group(0)
@@ -499,10 +517,12 @@ class ConverterVideoThread():
         cpl = thread.compile_pattern_list([pexpect.EOF, "frame= *\d+"])
         while True:
             i = thread.expect_list(cpl, timeout=None)
-            if i == 0: # EOF
+            if i == 0:  # EOF
                 self._running = False
                 return True
             if i == 1:
-                return_string = thread.match.group(0).replace("frame=", "").lstrip()
+                return_string = thread.match.group(
+                    0).replace("frame=", "").lstrip()
                 self._frame_process = int(return_string)
-                self._percent = round(float(self._frame_process/ self._frame_count * 100), 2)
+                self._percent = round(
+                    float(self._frame_process / self._frame_count * 100), 2)
