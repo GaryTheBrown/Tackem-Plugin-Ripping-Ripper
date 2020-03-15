@@ -4,6 +4,7 @@ import pathlib
 from libs.startup_arguments import PROGRAMCONFIGLOCATION, PLUGINFOLDERLOCATION
 from libs.plugin_base import PluginBaseClass, load_plugin_settings
 from libs.config.list import ConfigList
+from libs.config.obj.enabled import ConfigObjEnabled
 from libs.config.obj.boolean import ConfigObjBoolean
 from libs.config.obj.string import ConfigObjString
 from libs.config.obj.integer_number import ConfigObjIntegerNumber
@@ -49,12 +50,7 @@ def check_enabled():
 CONFIG = ConfigList(
     "ripper",
     "Ripper",
-    ConfigObjBoolean(
-        "enabled",
-        False,
-        "Enabled",
-        ""
-    ),
+    ConfigObjEnabled(),
     ConfigList(
         "locations",
         "Folder Location",
@@ -86,12 +82,7 @@ CONFIG = ConfigList(
     ConfigList(
         "videoripping",
         "Video Ripping",
-        ConfigObjBoolean(
-            "enabled",
-            False,
-            "Enabled",
-            ""
-        ),
+        ConfigObjEnabled(),
         ConfigObjOptionsCheckBox(
             "torip",
             [
@@ -109,22 +100,12 @@ CONFIG = ConfigList(
     ConfigList(
         "audioripping",
         "Audo CD Ripping",
-        ConfigObjBoolean(
-            "enabled",
-            False,
-            "Enabled",
-            ""
-        ),
+        ConfigObjEnabled(),
     ),
     ConfigList(
         "converter",
         "Converter",
-        ConfigObjBoolean(
-            "enabled",
-            False,
-            "Enabled",
-            ""
-        ),
+        ConfigObjBEnabled(),
         ConfigObjString(
             "ffmpeglocation",
             "ffmpeg",
@@ -541,12 +522,7 @@ Do you want the default stream to be the Original language or dubbed in your lan
         many_section=ConfigList(
             "",
             "",
-            ConfigObjBoolean(
-                "enabled",
-                False,
-                "Enabled",
-                ""
-            ),
+            ConfigObjEnabled(),
             ConfigObjString(
                 "name",
                 "",
