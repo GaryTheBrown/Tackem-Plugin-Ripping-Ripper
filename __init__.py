@@ -105,7 +105,7 @@ CONFIG = ConfigList(
     ConfigList(
         "converter",
         "Converter",
-        ConfigObjBEnabled(),
+        ConfigObjEnabled(),
         ConfigObjString(
             "ffmpeglocation",
             "ffmpeg",
