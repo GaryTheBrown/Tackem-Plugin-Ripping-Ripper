@@ -21,11 +21,10 @@ class APIScraperFindMovie(APIBase):
             return self._return_data(
                 user,
                 "addMulti",
-                "Adding Instance of {} - {}".format(plugin_type, plugin_name),
+                f"Adding Instance of {plugin_type} - {plugin_name}",
                 False,
                 instance=instance,
-                error="Missing Data Passed. Requires {}".format(
-                    ", ".join(required)),
+                error=f"Missing Data Passed. Requires {", ".join(required)}",
                 errorNumber=0
             )
 
@@ -34,7 +33,7 @@ class APIScraperFindMovie(APIBase):
             return self._return_data(
                 user,
                 "addMulti",
-                "Adding Instance of {} - {}".format(plugin_type, plugin_name),
+                f"Adding Instance of {plugin_type} - {plugin_name}",
                 False,
                 instance=instance,
                 error="Instance already exists",
@@ -45,23 +44,21 @@ class APIScraperFindMovie(APIBase):
             return self._return_data(
                 user,
                 "addMulti",
-                "Adding Instance of {} - {}".format(plugin_type, plugin_name),
+                f"Adding Instance of {plugin_type} - {plugin_name}",
                 False,
                 instance=instance,
                 error="Cloning Data Failed",
                 errorNumber=2
             )
 
-        variable_name = "plugins_{}_{}".format(
-            plugin_type, plugin_name)
         return self._return_data(
             user,
             "config",
-            "Adding Instance of {} - {}".format(plugin_type, plugin_name),
+            f"Adding Instance of {plugin_type} - {plugin_name}",
             True,
             instance=instance,
             html=CONFIG["plugins"][plugin_type][plugin_name][instance].panel(
-                variable_name,
+                f"plugins_{plugin_type}_{plugin_name}",
                 instance.title()
             )
         )

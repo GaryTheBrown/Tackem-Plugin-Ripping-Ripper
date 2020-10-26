@@ -3,7 +3,8 @@ from abc import ABCMeta, abstractmethod
 import threading
 import json
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
-from libs.sql import Database
+from libs.database import Database
+from libs.database.messages import SQLTableCountWhere
 from config_data import CONFIG
 from .ripper_subsystem import RipperSubSystem
 from .converter import create_video_converter_row
@@ -45,6 +46,11 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
         disc_type = self._disc_type
         basic_info = {"uuid": uuid, "label": label,
                       "sha256": sha256, "disc_type": disc_type}
+
+        msg1 = SQLTableCountWhere(
+            INFO_DB["name"],
+
+        )
         self._db_id = Database.sql().table_has_row(
             self._thread_name,
             INFO_DB["name"],
@@ -130,7 +136,6 @@ class Video(RipperSubSystem, metaclass=ABCMeta):
         config = CONFIG['plugins']['ripping']['ripper']
         if config['converter']['enabled'].value:
             create_video_converter_row(
-                self._thread_name,
                 self._db_id,
                 self._disc_rip_info,
                 config['videoripping']['torip'].value

@@ -3,10 +3,12 @@ import threading
 import os
 import os.path
 import pexpect
+from libs.database import Database
+from libs.database.messages import SQLSelect, SQLUpdate
+from libs.database.where import Where
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
-from libs.scraper.scraper_base import Scraper
-from libs.data.languages import Languages
-from libs.sql import Database
+from libs.scraper import Scraper
+from data.languages import Languages
 from config_data import CONFIG
 from .data.db_tables import VIDEO_CONVERT_DB_INFO as VIDEO_CONVERT_DB
 from .ffprobe import FFprobe
@@ -27,11 +29,12 @@ class ConverterVideoThread():
         self._thread.setName(self._thread_name)
         self._thread_run = False
         self._task_done = False
-        self._sql_row_id = Database.sql().table_has_row(
-            self._thread_name,
-            VIDEO_CONVERT_DB["name"],
-            {"id": self._id}
+        msg = SQLSelect(
+            VIDEO_CONVERT_DB.name(),
+            Where("id", self._id)
         )
+        Database.call(msg)
+        self._sql_row_id = msg.return_data['id']
         loc = CONFIG['plugins']['ripping']['ripper']['locations']['videoripping'].value
         if loc[0] != "/":
             loc = PROGRAMCONFIGLOCATION
@@ -111,11 +114,12 @@ class ConverterVideoThread():
             os.rename(self._outfile, self._infile)
             if not self._conf['keeporiginalfile'].value:
                 os.remove(self._infile + ".OLD")
-            Database.sql().update(
-                self._thread_name,
-                VIDEO_CONVERT_DB["name"],
-                self._sql_row_id,
-                {"converted": True}
+            Database.call(
+                SQLUpdate(
+                    VIDEO_CONVERT_DB.name(),
+                    Where("id", self._sql_row_id),
+                    converted=True
+                )
             )
         self._task_done = True
         self._tasks_sema.release()

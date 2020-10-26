@@ -1,10 +1,9 @@
 '''stream type information'''
 from abc import ABCMeta, abstractmethod
 import json
-from libs.data.languages import Languages
+from data.languages import Languages
 from libs import html_parts as ghtml_parts
 from ..www import html_parts
-
 
 class StreamType(metaclass=ABCMeta):
     '''Master Type'''
@@ -145,7 +144,8 @@ class AudioStreamType(StreamType):
             language = Languages().get_name_from_3t(language_3t)
             ffprobeinfo = {
                 "Codec Name": section_info.get("codec_long_name", ""),
-                "Sample Rate": "{:,}".format(int(section_info.get("sample_rate", 0)) / 1000) + "kHz",
+                "Sample Rate": "{:,}".format(
+                    int(section_info.get("sample_rate", 0)) / 1000) + "kHz",
                 "Channels": section_info.get("channels", ""),
                 "Channel Layout": section_info.get("channel_layout", ""),
                 "Bit Rate": "{:,}".format(int(section_info.get("bit_rate", 0)) / 1000) + "kbit/s",

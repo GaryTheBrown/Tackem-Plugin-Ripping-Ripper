@@ -2,7 +2,9 @@
 from abc import ABCMeta, abstractmethod
 import json
 import discid
-from libs.sql import Database
+from libs.database import Database
+from libs.database.messages import SQLInsert, SQLSelect, SQLUpdate
+from libs.database.where import Where
 from libs.musicbrainz import MUSICBRAINZ
 from .ripper_subsystem import RipperSubSystem
 from .data.db_tables import AUDIO_INFO_DB_INFO as INFO_DB
@@ -46,45 +48,48 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
 #######################
     def _check_db_and_api_for_disc_info(self):
         '''checks the DB and API for the Disc info'''
-        basic_info = {"musicbrainz_disc_id": self._disc_id,
-                      "track_count": self._track_count}
-        self._db_id = Database.sql().table_has_row(
-            self._thread_name,
+        msg1 = SQLSelect(
             INFO_DB["name"],
-            basic_info
+            Where("musicbrainz_disc_id", self._disc_id),
+            Where("track_count", self._track_count)
         )
-        if self._db_id:
-            # data in local DB
-            return_data = Database.sql().select_by_row(
-                self._thread_name,
-                INFO_DB["name"],
-                self._db_id
+        Database.call(msg1)
+        if msg1.return_data: # info in local DB
+            self._db_id = msg1.return_data['id']
+            self._release_id = msg1.return_data['release_id']
+            disc_info_json = msg1.return_data['disc_data']
+            Database.call(
+                SQLUpdate(
+                    INFO_DB["name"],
+                    Where("id", self._db_id),
+                    ripped=False,
+                    ready_to_convert=False,
+                    ready_to_rename=False,
+                    ready_for_library=False,
+                    completed=False
+                )
             )
-            self._release_id = return_data['release_id']
-            disc_info_json = return_data['disc_data']
-            Database.sql().update(
-                self._thread_name,
-                INFO_DB["name"],
-                self._db_id,
-                {
-                    "ripped": False,
-                    "ready_to_convert": False,
-                    "ready_to_rename": False,
-                    "ready_for_library": False,
-                    "completed": False
-                }
-            )
+
             if disc_info_json is not None:
                 self._disc_info = json.loads(disc_info_json)
                 return
         else:
-            Database.sql().insert(self._thread_name,
-                                  INFO_DB["name"], basic_info)
-            self._db_id = Database.sql().table_has_row(
-                self._thread_name,
-                INFO_DB["name"],
-                basic_info
+            Database.call(
+                SQLInsert(
+                    INFO_DB["name"],
+                    musicbrainz_disc_id=self._disc_id,
+                    track_count=self._track_count
+                )
             )
+
+            msg3 = SQLSelect(
+                INFO_DB["name"],
+                Where("musicbrainz_disc_id", self._disc_id),
+                Where("track_count", self._track_count)
+            )
+            Database.call(msg3)
+            self._db_id = msg3.return_data['id']
+
         if self._disc_info is None:
             data = MUSICBRAINZ.get_data_for_discid(self._disc_id)
             if data.get("release-count", 0) == 1:
@@ -96,15 +101,13 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
                 self._disc_info = None
 
         if self._disc_info is not None:
-            data_to_save = {
-                "release_id": self._release_id,
-                "disc_data": self._disc_info,
-            }
-            Database.sql().update(
-                self._thread_name,
-                INFO_DB["name"],
-                self._db_id,
-                data_to_save
+            Database.call(
+                SQLUpdate(
+                    INFO_DB["name"],
+                    Where("id", self._db_id),
+                    release_id=self._release_id,
+                    disc_data=self._disc_info,
+                )
             )
 
 
@@ -147,11 +150,12 @@ class AudioCD(RipperSubSystem, metaclass=ABCMeta):
         self._set_drive_status("Ripping Disc")
         self._rip_disc()
         self._set_drive_status("idle")
-        Database.sql().update(
-            self._thread_name,
-            INFO_DB["name"],
-            self._db_id,
-            {"ripped": True}
+        Database.call(
+            SQLUpdate(
+                INFO_DB["name"],
+                Where("id", self._db_id),
+                ripped=True
+            )
         )
         if self._release_id:
             self._send_to_next_system()

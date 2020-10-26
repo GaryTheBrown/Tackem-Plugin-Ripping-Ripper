@@ -3,7 +3,9 @@ import threading
 import json
 import os
 from libs.startup_arguments import PROGRAMCONFIGLOCATION
-from libs.sql import Database
+from libs.database import Database
+from libs.database.messages import SQLSelect, SQLUpdate
+from libs.database.where import Where
 from config_data import CONFIG
 from .ffprobe import FFprobe
 from .data.events import RipperEvents
@@ -59,13 +61,13 @@ class Renamer():
 
     def _video_renamer(self):
         '''the renamer function for the video files'''
-        check = {"ready_to_rename": True}
-        return_data = Database.sql().select(
-            self._thread_name,
-            INFO_DB["name"],
-            check
+        msg1 = SQLSelect(
+            INFO_DB.name(),
+            Where("ready_to_rename", True)
         )
-        for item in return_data:
+        Database.call(msg1)
+
+        for item in msg1.return_data:
             rip_data = make_disc_type(json.loads(item['rip_data']))
             in_folder = self._in_location + item['id'] + "/"
             out_folder = self._out_location + item['id'] + "/"
@@ -104,12 +106,12 @@ class Renamer():
                 out_file += ".mkv"
                 final_out_file = out_folder + out_file
                 os.rename(in_file, final_out_file)
-
-            Database.sql().update(
-                self._thread_name,
-                INFO_DB["name"],
-                item['id'],
-                {"ready_for_library": True}
+            Database.call(
+                SQLUpdate(
+                    INFO_DB.name(),
+                    Where("id", item['id']),
+                    ready_for_library=True
+                )
             )
             if not self._thread_run:
                 return

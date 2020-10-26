@@ -3,7 +3,7 @@ from abc import ABCMeta, abstractmethod
 import datetime
 import json
 from libs import html_parts
-from libs.data.languages import Languages
+from data.languages import Languages
 from . import video_track_type as track_type
 TYPES = {"Movie": "film",
          "TV Show": "tv",
@@ -103,7 +103,7 @@ class DiscType(metaclass=ABCMeta):
         html += html_parts.item("language", "Original Language",
                                 "Choose the Original Language here",
                                 html_parts.select_box("language", self._language,
-                                                      Languages().config_option_2(),
+                                                      Languages.config_option_2(),
                                                       disabled=search),
                                 True)
         return html

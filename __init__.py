@@ -1,6 +1,8 @@
 '''Ripper Linux init'''
 import platform
 import pathlib
+from data.languages import Languages
+from data.audio_format_options import audio_format_options
 from libs.startup_arguments import PROGRAMCONFIGLOCATION, PLUGINFOLDERLOCATION
 from libs.plugin_base import PluginBaseClass, load_plugin_settings
 from libs.config.list import ConfigList
@@ -17,9 +19,8 @@ from libs.config.obj.data.checkbox import ConfigObjCheckbox
 from libs.config.obj.data.input_attributes import InputAttributes
 from libs.config.rules import ConfigRules
 from libs.program_checker import check_for_required_programs
-from libs.data.languages import Languages
-from libs.data.audio_format_options import audio_format_options
-from libs.sql import Database
+from libs.database import Database
+from libs.database.messages import SQLTable
 from config_data import CONFIG as ROOT_CONFIG
 from . import www
 from .data import db_tables
@@ -569,8 +570,8 @@ class Plugin(PluginBaseClass):
         self._converter = None
         self._renamer = None
 
-        Database.sql().table_checks("Ripper", db_tables.VIDEO_INFO_DB_INFO)
-        Database.sql().table_checks("Ripper", db_tables.VIDEO_CONVERT_DB_INFO)
+        Database.call(SQLTable(db_tables.VIDEO_INFO_DB_INFO))
+        Database.call(SQLTable(db_tables.VIDEO_CONVERT_DB_INFO))
 
         for location in ROOT_CONFIG['plugins']['ripping']['ripper']['locations']:
             folder = ROOT_CONFIG['plugins']['ripping']['ripper']['locations'][location].value

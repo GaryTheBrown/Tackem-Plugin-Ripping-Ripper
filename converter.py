@@ -1,7 +1,9 @@
 '''Master Section for the Converter controller'''
 import threading
 import json
-from libs.sql import Database
+from libs.database import Database
+from libs.database.messages import SQLDelete, SQLInsert, SQLSelect, SQLUpdate
+from libs.database.where import Where
 from config_data import CONFIG
 from .data.db_tables import VIDEO_CONVERT_DB_INFO as VIDEO_CONVERT_DB, VIDEO_INFO_DB_INFO as INFO_DB
 from .data.disc_type import make_disc_type
@@ -111,18 +113,17 @@ class Converter():
 
     def _get_video_tasks(self):
         '''Grab video tasks and append them to the list'''
-        check = {"converted": False}
-        return_data = Database.sql().select(
-            self._thread_name,
-            VIDEO_CONVERT_DB["name"],
-            check
+        msg = SQLSelect(
+            VIDEO_CONVERT_DB.name(),
+            Where("converted", False)
         )
+        Database.call(msg)
         data = []
-        if return_data:
-            if isinstance(return_data, list):
-                data = return_data
-            elif isinstance(return_data, dict):
-                data.append(return_data)
+        if msg.return_data:
+            if isinstance(msg.return_data, list):
+                data = msg.return_data
+            elif isinstance(msg.return_data, dict):
+                data.append(msg.return_data)
             for item in data:
                 if "v" + item['id'] not in self._list_of_running_ids:
                     item['disc_info'] = make_disc_type(
@@ -140,32 +141,34 @@ class Converter():
 
     def _clear_video_tasks(self):
         '''clears the video tasks from the database when done'''
-        discs = [x['id'] for x in Database.sql().select(
-            self._thread_name,
-            INFO_DB["name"],
-            {
-                "ready_to_convert": True,
-                "ready_to_rename": False
-            },
-            "id"
-        )]
-        convert_data = Database.sql().select(
-            self._thread_name,
-            VIDEO_CONVERT_DB["name"]
+        msg1 = SQLSelect(
+            INFO_DB.name(),
+            Where("ready_to_convert", True),
+            Where("ready_to_rename", False)
         )
+        Database.call(msg1)
+        discs = [x['id'] for x in msg1.return_data]
+
+        msg2 = SQLSelect(
+            VIDEO_CONVERT_DB.name()
+        )
+        Database.call(msg2)
         wake_renamer = False
+
         for disc in discs:
-            if all([item['converted'] for item in convert_data if item['info_id'] == disc]):
-                Database.sql().delete_where(
-                    self._thread_name,
-                    VIDEO_CONVERT_DB["name"],
-                    {"disc_id": disc}
+            if all([item['converted'] for item in msg2.return_data if item['info_id'] == disc]):
+                Database.call(
+                    SQLDelete(
+                        VIDEO_CONVERT_DB.name(),
+                        Where("disc_id", disc)
+                    )
                 )
-                Database.sql().update(
-                    self._thread_name,
-                    INFO_DB["name"],
-                    disc,
-                    {"ready_to_rename": True}
+                Database.call(
+                    SQLUpdate(
+                        INFO_DB.name(),
+                        Where("id", disc),
+                        ready_to_rename=True
+                    )
                 )
                 wake_renamer = True
         return wake_renamer
@@ -188,25 +191,25 @@ class Converter():
         return True
 
 
-def create_video_converter_row(thread_name, info_id, disc_rip_info, to_rip):
+def create_video_converter_row(info_id, disc_rip_info, to_rip):
     '''Function to add Video tracks to Convertor DB'''
     folder_name = str(info_id) + "/"
     disc_info = json.dumps(disc_rip_info.make_dict(no_tracks=True))
     for i, track in enumerate(disc_rip_info.tracks()):
         if track.video_type() in to_rip:
-            file_name = folder_name + str(i).zfill(2) + ".mkv"
-            to_save = {
-                "info_id": info_id,
-                "filename": file_name,
-                "disc_info": disc_info,
-                "track_info": json.dumps(track.make_dict())
-            }
-            Database.sql().insert(
-                thread_name, VIDEO_CONVERT_DB["name"], to_save)
+            Database.call(
+                SQLInsert(
+                    VIDEO_CONVERT_DB.name(),
+                    info_id=info_id,
+                    filename=folder_name + str(i).zfill(2) + ".mkv",
+                    disc_info=disc_info,
+                    track_info=json.dumps(track.make_dict())
+                )
+            )
 
-
-def create_audiocd_converter_row(thread_name, info_id, disc_rip_info):
+def create_audiocd_converter_row(info_id, disc_rip_info):
     '''Function to add Audio CD tracks to Convertor DB'''
     folder_name = str(info_id) + "/"
     disc_info = json.dumps(disc_rip_info)
     # 'audio_XX.wav'
+    #TODO FINISH THIS OFF
